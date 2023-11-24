@@ -30,3 +30,7 @@ m_down:
 sqlc:
 	#generate the sql queries to golang
 	sqlc generate
+
+sqlc_win:
+	#generate the sql queries to golang for windows
+	docker run --rm -v $(pwd):/src -w /src sqlc/sqlc generate
