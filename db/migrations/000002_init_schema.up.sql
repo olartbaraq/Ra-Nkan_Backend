@@ -51,7 +51,7 @@ CREATE TABLE "orders" (
   "unit_price" float,
   "total_price" float NOT NULL,
   "user_id" bigint,
-  "session_id" bigint NOT NULL,
+  "session_id" bigint UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -98,13 +98,9 @@ ALTER TABLE "products" ADD FOREIGN KEY ("shop_id") REFERENCES "shops" ("id");
 
 ALTER TABLE "carts" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
 
-ALTER TABLE "carts" ADD FOREIGN KEY ("unit_price") REFERENCES "products" ("price");
-
 ALTER TABLE "carts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
 ALTER TABLE "orders" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
-
-ALTER TABLE "orders" ADD FOREIGN KEY ("unit_price") REFERENCES "products" ("price");
 
 ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
