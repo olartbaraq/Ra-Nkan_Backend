@@ -9,7 +9,3 @@ services:
       - POSTGRES_PASSWORD=testing
     ports:
       - 5432:5432
-
-  sqlc:
-    container_name: sqlc_container
-    image: sqlc/sqlc
