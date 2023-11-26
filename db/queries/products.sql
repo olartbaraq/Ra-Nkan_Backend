@@ -22,7 +22,7 @@ SELECT * FROM products WHERE shop_id = $1 ORDER BY id;
 SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: UpdateProduct :one
-UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $6 WHERE id = $1 RETURNING *;
+UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING *;
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;

@@ -5,7 +5,7 @@ import (
 )
 
 var alphabets = "abcdefghijklmnopqrstuvwxyz"
-var numbers = "0123456789"
+var numbers = "123456789"
 
 func RandomString(r int) string {
 	wholeLetter := []rune{}

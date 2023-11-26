@@ -75,52 +75,65 @@ func TestGetProductByName(t *testing.T) {
 }
 
 func TestGetProductByShop(t *testing.T) {
+
 	product := createRandomProduct(t)
 
 	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopID)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
+	assert.Equal(t, len(getProducts), 1)
 }
 
-// func TestListAllShops(t *testing.T) {
-// 	arg := db.ListAllShopsParams{
-// 		Limit:  10,
-// 		Offset: 2,
-// 	}
+func TestListAllProducts(t *testing.T) {
 
-// 	allUsers, err := testQueries.ListAllShops(context.Background(), arg)
-// 	assert.NoError(t, err)
-// 	assert.NotEmpty(t, allUsers)
-// }
+	for i := 0; i < 10; i++ {
+		createRandomProduct(t)
+	}
+	arg := db.ListAllProductParams{
+		Limit:  10,
+		Offset: 4,
+	}
 
-// func TestUpdateShop(t *testing.T) {
+	allProducts, err := testQueries.ListAllProduct(context.Background(), arg)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, allProducts)
+	assert.Equal(t, int32(len(allProducts)), arg.Limit)
+}
 
-// 	shop := createRandomShop(t)
+func TestUpdateProduct(t *testing.T) {
 
-// 	arg := db.UpdateShopParams{
-// 		ID:        shop.ID,
-// 		Name:      utils.RandomName(),
-// 		Email:     utils.RandomEmail(),
-// 		Phone:     utils.RandomPhone(),
-// 		Address:   "74 Avenue Suite, idiroko, yanibo, ajah",
-// 		UpdatedAt: time.Now(),
-// 	}
+	product := createRandomProduct(t)
 
-// 	updatedShop, err := testQueries.UpdateShop(context.Background(), arg)
-// 	assert.NoError(t, err)
-// 	assert.NotEmpty(t, shop)
-// 	assert.Equal(t, updatedShop.Email, arg.Email)
-// 	assert.Equal(t, updatedShop.Name, arg.Name)
-// 	assert.Equal(t, updatedShop.Phone, arg.Phone)
-// 	assert.Equal(t, updatedShop.Address, arg.Address)
-// 	assert.WithinDuration(t, updatedShop.UpdatedAt, time.Now(), 2*time.Second)
+	arg := db.UpdateProductParams{
+		ID:          product.ID,
+		Name:        utils.RandomName(),
+		Image:       utils.RandomEmail(),
+		Price:       utils.RandomPrice(),
+		Description: utils.RandomText(),
+		QtyAval:     utils.RandomQty(),
+		UpdatedAt:   time.Now(),
+	}
 
-// }
+	updatedProduct, err := testQueries.UpdateProduct(context.Background(), arg)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, product)
+	assert.Equal(t, updatedProduct.Name, arg.Name)
+	assert.Equal(t, updatedProduct.Image, arg.Image)
+	assert.Equal(t, updatedProduct.Price, arg.Price)
+	assert.Equal(t, updatedProduct.Description, arg.Description)
+	assert.Equal(t, updatedProduct.QtyAval, arg.QtyAval)
+	assert.WithinDuration(t, updatedProduct.UpdatedAt, time.Now(), 2*time.Second)
 
-// func TestDeleteShop(t *testing.T) {
-// 	shop := createRandomShop(t)
+}
 
-// 	err := testQueries.DeleteShop(context.Background(), shop.ID)
-// 	assert.NoError(t, err)
+func TestDeleteProduct(t *testing.T) {
+	product := createRandomProduct(t)
 
-// }
+	err := testQueries.DeleteProduct(context.Background(), product.ID)
+	assert.NoError(t, err)
+
+	getProduct, err := testQueries.GetProductById(context.Background(), product.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getProduct)
+
+}

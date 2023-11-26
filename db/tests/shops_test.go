@@ -68,6 +68,10 @@ func TestGetShopByEmail(t *testing.T) {
 }
 
 func TestListAllShops(t *testing.T) {
+
+	for i := 0; i < 10; i++ {
+		createRandomShop(t)
+	}
 	arg := db.ListAllShopsParams{
 		Limit:  10,
 		Offset: 2,
@@ -76,6 +80,7 @@ func TestListAllShops(t *testing.T) {
 	allUsers, err := testQueries.ListAllShops(context.Background(), arg)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, allUsers)
+	assert.Equal(t, int32(len(allUsers)), arg.Limit)
 }
 
 func TestUpdateShop(t *testing.T) {
@@ -107,5 +112,9 @@ func TestDeleteShop(t *testing.T) {
 
 	err := testQueries.DeleteShop(context.Background(), shop.ID)
 	assert.NoError(t, err)
+
+	getShop, err := testQueries.GetShopById(context.Background(), shop.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getShop)
 
 }

@@ -1,14 +1,15 @@
 package utils
 
 import (
-	"log"
+	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func GenerateHashPassword(password string) (string, error) {
 	if len(password) == 0 {
-		log.Fatal("Password must not be empty")
+		return "Password must not be empty", errors.New("password must not be empty")
+
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createProduct = `-- name: CreateProduct :one
@@ -201,16 +202,17 @@ func (q *Queries) ListAllProduct(ctx context.Context, arg ListAllProductParams) 
 }
 
 const updateProduct = `-- name: UpdateProduct :one
-UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $6 WHERE id = $1 RETURNING id, name, description, price, image, qty_aval, shop_id, created_at, updated_at
+UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING id, name, description, price, image, qty_aval, shop_id, created_at, updated_at
 `
 
 type UpdateProductParams struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	Image       string `json:"image"`
-	Price       string `json:"price"`
-	Description string `json:"description"`
-	QtyAval     int32  `json:"qty_aval"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Image       string    `json:"image"`
+	Price       string    `json:"price"`
+	Description string    `json:"description"`
+	QtyAval     int32     `json:"qty_aval"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
@@ -221,6 +223,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.Price,
 		arg.Description,
 		arg.QtyAval,
+		arg.UpdatedAt,
 	)
 	var i Product
 	err := row.Scan(

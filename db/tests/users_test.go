@@ -122,14 +122,19 @@ func TestGetUserByEmail(t *testing.T) {
 }
 
 func TestListAllUsers(t *testing.T) {
+
+	for i := 0; i < 10; i++ {
+		createRandomUser(t)
+	}
 	arg := db.ListAllUsersParams{
 		Limit:  10,
-		Offset: 2,
+		Offset: 0,
 	}
 
 	allUsers, err := testQueries.ListAllUsers(context.Background(), arg)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, allUsers)
+	assert.Equal(t, int32(len(allUsers)), arg.Limit)
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -137,5 +142,9 @@ func TestDeleteUser(t *testing.T) {
 
 	err := testQueries.DeleteUser(context.Background(), user.ID)
 	assert.NoError(t, err)
+
+	getUser, err := testQueries.GetUserById(context.Background(), user.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getUser)
 
 }
