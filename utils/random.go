@@ -1,9 +1,7 @@
 package utils
 
 import (
-	"log"
 	"math/rand"
-	"strconv"
 )
 
 var alphabets = "abcdefghijklmnopqrstuvwxyz"
@@ -31,20 +29,8 @@ func RandIntegers(r int) string {
 	return string(wholeFigure)
 }
 
-func randIntQty(r int) int32 {
-	wholeQty := []rune{}
-	k := len(numbers)
-
-	for i := 0; i < r; i++ {
-		index := rand.Intn(k)
-		wholeQty = append(wholeQty, rune(numbers[index]))
-	}
-	price := string(wholeQty)
-	value, err := strconv.Atoi(price)
-	if err != nil {
-		log.Fatal("COuld not convert string to integer", err)
-	}
-	return int32(value)
+func randomInteger(min, max int32) int32 {
+	return min + rand.Int31n(max-min+1)
 }
 
 func RandomEmail() string {
@@ -72,5 +58,5 @@ func RandomPrice() string {
 }
 
 func RandomQty() int32 {
-	return randIntQty(3)
+	return randomInteger(1, 2000)
 }

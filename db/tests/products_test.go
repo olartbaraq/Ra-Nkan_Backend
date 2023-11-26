@@ -74,6 +74,14 @@ func TestGetProductByName(t *testing.T) {
 	assert.NotEmpty(t, getProducts)
 }
 
+func TestGetProductByShop(t *testing.T) {
+	product := createRandomProduct(t)
+
+	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopID)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, getProducts)
+}
+
 // func TestListAllShops(t *testing.T) {
 // 	arg := db.ListAllShopsParams{
 // 		Limit:  10,

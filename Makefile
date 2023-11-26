@@ -31,6 +31,10 @@ sqlc:
 	#generate the sql queries to golang
 	sqlc generate
 
+test:
+	#run all tests in test directory
+	go test -v -cover ./...
+
 sqlc_win:
 	#generate the sql queries to golang for windows
 	docker run --rm -v $(pwd):/src -w /src sqlc/sqlc generate
