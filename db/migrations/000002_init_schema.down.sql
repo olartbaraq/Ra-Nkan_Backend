@@ -5,3 +5,5 @@ DROP TABLE IF EXISTS "shops";
 DROP TABLE IF EXISTS "orders";
 DROP TABLE IF EXISTS "invoice";
 DROP TABLE IF EXISTS "shipping";
+DROP TABLE IF EXISTS "category";
+DROP TABLE IF EXISTS "sub_category";
