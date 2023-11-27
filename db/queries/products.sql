@@ -23,6 +23,9 @@ SELECT * FROM products WHERE shop_id = $1 ORDER BY id;
 -- name: GetProductByPrice :many
 SELECT * FROM products WHERE price = $1 ORDER BY id;
 
+-- name: GetProductByPCS :many
+SELECT * FROM products WHERE price = $1 AND sub_category_id = $2 AND category_id = $3 ORDER BY id;
+
 -- name: GetProductBySubCategory :many
 SELECT * FROM products WHERE sub_category_id = $1 ORDER BY id;
 

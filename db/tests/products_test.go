@@ -14,14 +14,18 @@ import (
 
 func createRandomProduct(t *testing.T) db.Product {
 	shop := createRandomShop(t)
+	category := createRandomCategory(t)
+	sub_category := createRandomSubCategory(t)
 
 	arg := db.CreateProductParams{
-		Name:        utils.RandomName(),
-		Description: utils.RandomText(),
-		Price:       utils.RandomPrice(),
-		Image:       "https://imagesget.com",
-		QtyAval:     utils.RandomQty(),
-		ShopID:      shop.ID,
+		Name:          utils.RandomName(),
+		Description:   utils.RandomText(),
+		Price:         utils.RandomPrice(),
+		Image:         "https://imagesget.com",
+		QtyAval:       utils.RandomQty(),
+		ShopID:        shop.ID,
+		CategoryID:    category.ID,
+		SubCategoryID: sub_category.ID,
 	}
 
 	product, err := testQueries.CreateProduct(context.Background(), arg)
@@ -41,12 +45,14 @@ func TestCreateProduct(t *testing.T) {
 	productTemplate := createRandomProduct(t)
 
 	product, err := testQueries.CreateProduct(context.Background(), db.CreateProductParams{
-		Name:        productTemplate.Name,
-		Price:       productTemplate.Price,
-		Description: productTemplate.Description,
-		Image:       productTemplate.Image,
-		QtyAval:     productTemplate.QtyAval,
-		ShopID:      productTemplate.ShopID,
+		Name:          productTemplate.Name,
+		Price:         productTemplate.Price,
+		Description:   productTemplate.Description,
+		Image:         productTemplate.Image,
+		QtyAval:       productTemplate.QtyAval,
+		ShopID:        productTemplate.ShopID,
+		CategoryID:    productTemplate.CategoryID,
+		SubCategoryID: productTemplate.SubCategoryID,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, product)
@@ -82,6 +88,52 @@ func TestGetProductByShop(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
 	assert.Equal(t, len(getProducts), 1)
+}
+
+func TestGetProductBySubCategory(t *testing.T) {
+
+	product := createRandomProduct(t)
+
+	getProducts, err := testQueries.GetProductBySubCategory(context.Background(), product.SubCategoryID)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, getProducts)
+	assert.NotEqual(t, len(getProducts), 0)
+}
+
+func TestGetProductByCategory(t *testing.T) {
+
+	product := createRandomProduct(t)
+
+	getProducts, err := testQueries.GetProductByCategory(context.Background(), product.CategoryID)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, getProducts)
+	assert.NotEqual(t, len(getProducts), 0)
+}
+
+func TestGetProductByPrice(t *testing.T) {
+
+	product := createRandomProduct(t)
+
+	getProducts, err := testQueries.GetProductByPrice(context.Background(), product.Price)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, getProducts)
+	assert.NotEqual(t, len(getProducts), 0)
+}
+
+func TestGetProductByPCS(t *testing.T) {
+
+	product := createRandomProduct(t)
+
+	arg := db.GetProductByPCSParams{
+		Price:         product.Price,
+		CategoryID:    product.CategoryID,
+		SubCategoryID: product.SubCategoryID,
+	}
+
+	getProducts, err := testQueries.GetProductByPCS(context.Background(), arg)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, getProducts)
+	assert.NotEqual(t, len(getProducts), 0)
 }
 
 func TestListAllProducts(t *testing.T) {

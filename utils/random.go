@@ -33,6 +33,12 @@ func randomInteger(min, max int32) int32 {
 	return min + rand.Int31n(max-min+1)
 }
 
+func randomFloat(min, max float64) float64 {
+	return min + rand.Float64()*(max)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 func RandomEmail() string {
 	return RandomString(7) + "@testing.com"
 }
@@ -53,8 +59,8 @@ func RandomText() string {
 	return RandomString(100)
 }
 
-func RandomPrice() string {
-	return RandIntegers(6) + "." + RandIntegers(2)
+func RandomPrice() float64 {
+	return randomFloat(2, 3000)
 }
 
 func RandomQty() int32 {

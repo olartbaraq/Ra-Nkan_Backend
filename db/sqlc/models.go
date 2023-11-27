@@ -21,8 +21,10 @@ type Cart struct {
 }
 
 type Category struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Invoice struct {
@@ -87,9 +89,11 @@ type Shop struct {
 }
 
 type SubCategory struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	CategoryID int64  `json:"category_id"`
+	ID         int64     `json:"id"`
+	Name       string    `json:"name"`
+	CategoryID int64     `json:"category_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type User struct {

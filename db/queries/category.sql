@@ -1,6 +1,6 @@
--- name: CreateProduct :one
+-- name: CreateCategory :one
 INSERT INTO category (
-    name,
+    name
 ) VALUES (
     $1) RETURNING *;
 

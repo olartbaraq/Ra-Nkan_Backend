@@ -1,4 +1,4 @@
--- name: CreateProduct :one
+-- name: CreateSubCategory :one
 INSERT INTO sub_category (
     name,
     category_id
