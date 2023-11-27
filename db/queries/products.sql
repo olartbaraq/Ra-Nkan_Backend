@@ -5,9 +5,11 @@ INSERT INTO products (
     price,
     image,
     qty_aval,
-    shop_id
+    shop_id,
+    category_id,
+    sub_category_id
 ) VALUES (
-    $1, $2, $3, $4, $5, $6) RETURNING *;
+    $1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
 
 -- name: GetProductById :one
 SELECT * FROM products WHERE id = $1;
@@ -17,6 +19,18 @@ SELECT * FROM products WHERE name = $1 ORDER BY id;
 
 -- name: GetProductByShop :many
 SELECT * FROM products WHERE shop_id = $1 ORDER BY id;
+
+-- name: GetProductByPrice :many
+SELECT * FROM products WHERE price = $1 ORDER BY id;
+
+-- name: GetProductByPCS :many
+SELECT * FROM products WHERE price = $1 AND sub_category_id = $2 AND category_id = $3 ORDER BY id;
+
+-- name: GetProductBySubCategory :many
+SELECT * FROM products WHERE sub_category_id = $1 ORDER BY id;
+
+-- name: GetProductByCategory :many
+SELECT * FROM products WHERE category_id = $1 ORDER BY id;
 
 -- name: ListAllProduct :many
 SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2;

@@ -1,13 +1,15 @@
-package utils
+package db_test
 
 import (
 	"testing"
+
+	"github.com/olartbaraq/spectrumshelf/utils"
 )
 
 func TestGenerateHashPassword(t *testing.T) {
 	password := "secret123"
 
-	hashedPassword, err := GenerateHashPassword(password)
+	hashedPassword, err := utils.GenerateHashPassword(password)
 	if err != nil {
 		t.Fatalf("Error generating hash password: %v", err)
 	}
@@ -16,7 +18,7 @@ func TestGenerateHashPassword(t *testing.T) {
 		t.Fatal("Generated hash password is empty")
 	}
 
-	err = VerifyPassword(password, hashedPassword)
+	err = utils.VerifyPassword(password, hashedPassword)
 	if err != nil {
 		t.Fatalf("Error verifying password: %v", err)
 	}
@@ -26,17 +28,17 @@ func TestVerifyPassword(t *testing.T) {
 	password := "secret123"
 	wrongPassword := "wrongpassword"
 
-	hashedPassword, err := GenerateHashPassword(password)
+	hashedPassword, err := utils.GenerateHashPassword(password)
 	if err != nil {
 		t.Fatalf("Error generating hash password: %v", err)
 	}
 
-	err = VerifyPassword(password, hashedPassword)
+	err = utils.VerifyPassword(password, hashedPassword)
 	if err != nil {
 		t.Fatalf("Error verifying correct password: %v", err)
 	}
 
-	err = VerifyPassword(wrongPassword, hashedPassword)
+	err = utils.VerifyPassword(wrongPassword, hashedPassword)
 	if err == nil {
 		t.Fatal("Verification should fail for incorrect password")
 	}
@@ -44,7 +46,7 @@ func TestVerifyPassword(t *testing.T) {
 
 func TestGenerateHashPasswordError(t *testing.T) {
 	// Simulate an error in bcrypt.GenerateFromPassword by passing an empty password
-	_, err := GenerateHashPassword("")
+	_, err := utils.GenerateHashPassword("")
 	if err == nil {
 		t.Fatal("Expected error for empty password, but got nil")
 	}

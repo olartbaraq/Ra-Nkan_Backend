@@ -5,30 +5,37 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 )
 
 type Cart struct {
-	ID        int64  `json:"id"`
-	ProductID int64  `json:"product_id"`
-	QtyBought int32  `json:"qty_bought"`
-	UnitPrice string `json:"unit_price"`
+	ID         int64  `json:"id"`
+	ProductID  int64  `json:"product_id"`
+	QtyBought  int32  `json:"qty_bought"`
+	UnitPrice  string `json:"unit_price"`
+	TotalPrice string `json:"total_price"`
 	// to know which user has a cart
 	UserID    int64     `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Category struct {
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Invoice struct {
-	ID           int64         `json:"id"`
-	SessionID    sql.NullInt64 `json:"session_id"`
-	OrderCost    float64       `json:"order_cost"`
-	ShippingCost float64       `json:"shipping_cost"`
-	InvoiceNo    int64         `json:"invoice_no"`
-	UserID       sql.NullInt64 `json:"user_id"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
+	ID           int64     `json:"id"`
+	SessionID    int64     `json:"session_id"`
+	OrderCost    string    `json:"order_cost"`
+	ShippingCost string    `json:"shipping_cost"`
+	InvoiceNo    int64     `json:"invoice_no"`
+	UserID       int64     `json:"user_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type Order struct {
@@ -49,13 +56,15 @@ type Product struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 	// description of the item
-	Description string    `json:"description"`
-	Price       string    `json:"price"`
-	Image       string    `json:"image"`
-	QtyAval     int32     `json:"qty_aval"`
-	ShopID      int64     `json:"shop_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Description   string    `json:"description"`
+	Price         float64   `json:"price"`
+	Image         string    `json:"image"`
+	QtyAval       int32     `json:"qty_aval"`
+	ShopID        int64     `json:"shop_id"`
+	CategoryID    int64     `json:"category_id"`
+	SubCategoryID int64     `json:"sub_category_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type Shipping struct {
@@ -77,6 +86,14 @@ type Shop struct {
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type SubCategory struct {
+	ID         int64     `json:"id"`
+	Name       string    `json:"name"`
+	CategoryID int64     `json:"category_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type User struct {
