@@ -37,12 +37,12 @@ CREATE TABLE "products" (
 
 CREATE TABLE "category" (
   "id" bigserial PRIMARY KEY,
-  "name" varchar NOT NULL
+  "name" varchar UNIQUE NOT NULL
 );
 
 CREATE TABLE "sub_category" (
   "id" bigserial PRIMARY KEY,
-  "name" varchar NOT NULL,
+  "name" varchar UNIQUE NOT NULL,
   "category_id" bigint NOT NULL
 );
 

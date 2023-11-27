@@ -20,6 +20,15 @@ SELECT * FROM products WHERE name = $1 ORDER BY id;
 -- name: GetProductByShop :many
 SELECT * FROM products WHERE shop_id = $1 ORDER BY id;
 
+-- name: GetProductByPrice :many
+SELECT * FROM products WHERE price = $1 ORDER BY id;
+
+-- name: GetProductBySubCategory :many
+SELECT * FROM products WHERE sub_category_id = $1 ORDER BY id;
+
+-- name: GetProductByCategory :many
+SELECT * FROM products WHERE category_id = $1 ORDER BY id;
+
 -- name: ListAllProduct :many
 SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2;
 
