@@ -118,3 +118,15 @@ func TestDeleteShop(t *testing.T) {
 	assert.Empty(t, getShop)
 
 }
+
+func TestDeleteAllShop(t *testing.T) {
+	shop := createRandomShop(t)
+
+	err := testQueries.DeleteAllShops(context.Background())
+	assert.NoError(t, err)
+
+	getShop, err := testQueries.GetShopById(context.Background(), shop.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getShop)
+
+}

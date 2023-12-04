@@ -141,12 +141,12 @@ func TestListAllProducts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomProduct(t)
 	}
-	arg := db.ListAllProductParams{
+	arg := db.ListAllProductsParams{
 		Limit:  10,
 		Offset: 4,
 	}
 
-	allProducts, err := testQueries.ListAllProduct(context.Background(), arg)
+	allProducts, err := testQueries.ListAllProducts(context.Background(), arg)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, allProducts)
 	assert.Equal(t, int32(len(allProducts)), arg.Limit)
@@ -182,6 +182,18 @@ func TestDeleteProduct(t *testing.T) {
 	product := createRandomProduct(t)
 
 	err := testQueries.DeleteProduct(context.Background(), product.ID)
+	assert.NoError(t, err)
+
+	getProduct, err := testQueries.GetProductById(context.Background(), product.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getProduct)
+
+}
+
+func TestDeleteAllProducts(t *testing.T) {
+	product := createRandomProduct(t)
+
+	err := testQueries.DeleteAllProducts(context.Background())
 	assert.NoError(t, err)
 
 	getProduct, err := testQueries.GetProductById(context.Background(), product.ID)

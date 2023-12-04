@@ -25,7 +25,7 @@ CREATE TABLE "products" (
   "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "description" text NOT NULL,
-  "price" float NOT NULL,
+  "price" numeric(10,2) NOT NULL,
   "image" varchar NOT NULL,
   "qty_aval" int NOT NULL,
   "shop_id" bigint NOT NULL,
@@ -50,8 +50,8 @@ CREATE TABLE "carts" (
   "id" bigserial PRIMARY KEY,
   "product_id" bigint NOT NULL,
   "qty_bought" int NOT NULL,
-  "unit_price" numeric(10, 2) NOT NULL,
-  "total_price" numeric(10, 2) NOT NULL,
+  "unit_price" numeric(10,2) NOT NULL,
+  "total_price" numeric(10,2) NOT NULL,
   "user_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
@@ -61,8 +61,8 @@ CREATE TABLE "orders" (
   "id" bigserial PRIMARY KEY,
   "product_id" bigint NOT NULL,
   "qty_bought" int NOT NULL,
-  "unit_price" numeric(10, 2) NOT NULL,
-  "total_price" numeric(10, 2) NOT NULL,
+  "unit_price" numeric(10,2) NOT NULL,
+  "total_price" numeric(10,2) NOT NULL,
   "user_id" bigint NOT NULL,
   "session_id" bigint UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -72,8 +72,8 @@ CREATE TABLE "orders" (
 CREATE TABLE "invoice" (
   "id" bigserial PRIMARY KEY,
   "session_id" bigint NOT NULL,
-  "order_cost" numeric(10, 2) NOT NULL,
-  "shipping_cost" numeric(10, 2) NOT NULL,
+  "order_cost" numeric(10,2) NOT NULL,
+  "shipping_cost" numeric(10,2) NOT NULL,
   "invoice_no" bigserial NOT NULL,
   "user_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -87,6 +87,16 @@ CREATE TABLE "shipping" (
   "eta" int NOT NULL,
   "time_left" timestamptz NOT NULL,
   "time_arrive" timestamptz NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE "review" (
+  "id" bigserial PRIMARY KEY,
+  "product_id" bigint NOT NULL,
+  "user_id" bigint NOT NULL,
+  "rating" int NOT NULL,
+  "comment" text NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -134,3 +144,7 @@ ALTER TABLE "invoice" ADD FOREIGN KEY ("session_id") REFERENCES "orders" ("sessi
 ALTER TABLE "invoice" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
 ALTER TABLE "shipping" ADD FOREIGN KEY ("invoice_id") REFERENCES "invoice" ("id");
+
+ALTER TABLE "review" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
+
+ALTER TABLE "review" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");

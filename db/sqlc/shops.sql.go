@@ -47,6 +47,15 @@ func (q *Queries) CreateShop(ctx context.Context, arg CreateShopParams) (Shop, e
 	return i, err
 }
 
+const deleteAllShops = `-- name: DeleteAllShops :exec
+DELETE FROM shops
+`
+
+func (q *Queries) DeleteAllShops(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllShops)
+	return err
+}
+
 const deleteShop = `-- name: DeleteShop :exec
 DELETE FROM shops WHERE id = $1
 `

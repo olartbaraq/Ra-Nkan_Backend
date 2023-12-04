@@ -26,3 +26,6 @@ UPDATE users SET address = $4, phone = $3, email = $2, updated_at = $5 WHERE id 
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = $1;
+
+-- name: DeleteAllUsers :exec
+DELETE FROM users;

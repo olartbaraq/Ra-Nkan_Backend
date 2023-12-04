@@ -63,6 +63,15 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 	return i, err
 }
 
+const deleteAllProducts = `-- name: DeleteAllProducts :exec
+DELETE FROM products
+`
+
+func (q *Queries) DeleteAllProducts(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllProducts)
+	return err
+}
+
 const deleteProduct = `-- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1
 `
@@ -335,17 +344,17 @@ func (q *Queries) GetProductBySubCategory(ctx context.Context, subCategoryID int
 	return items, nil
 }
 
-const listAllProduct = `-- name: ListAllProduct :many
+const listAllProducts = `-- name: ListAllProducts :many
 SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products ORDER BY id LIMIT $1 OFFSET $2
 `
 
-type ListAllProductParams struct {
+type ListAllProductsParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListAllProduct(ctx context.Context, arg ListAllProductParams) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listAllProduct, arg.Limit, arg.Offset)
+func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, listAllProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
