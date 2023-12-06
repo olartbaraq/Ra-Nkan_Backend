@@ -57,7 +57,7 @@ type Product struct {
 	Name string `json:"name"`
 	// description of the item
 	Description   string    `json:"description"`
-	Price         float64   `json:"price"`
+	Price         string    `json:"price"`
 	Image         string    `json:"image"`
 	QtyAval       int32     `json:"qty_aval"`
 	ShopID        int64     `json:"shop_id"`
@@ -65,6 +65,16 @@ type Product struct {
 	SubCategoryID int64     `json:"sub_category_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type Review struct {
+	ID        int64     `json:"id"`
+	ProductID int64     `json:"product_id"`
+	UserID    int64     `json:"user_id"`
+	Rating    int32     `json:"rating"`
+	Comment   string    `json:"comment"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Shipping struct {

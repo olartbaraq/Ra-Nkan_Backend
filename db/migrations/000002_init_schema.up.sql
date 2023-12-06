@@ -37,13 +37,17 @@ CREATE TABLE "products" (
 
 CREATE TABLE "category" (
   "id" bigserial PRIMARY KEY,
-  "name" varchar NOT NULL
+  "name" varchar UNIQUE NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "sub_category" (
   "id" bigserial PRIMARY KEY,
-  "name" varchar NOT NULL,
-  "category_id" bigint NOT NULL
+  "name" varchar UNIQUE NOT NULL,
+  "category_id" bigint NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "carts" (

@@ -25,14 +25,14 @@ INSERT INTO products (
 `
 
 type CreateProductParams struct {
-	Name          string  `json:"name"`
-	Description   string  `json:"description"`
-	Price         float64 `json:"price"`
-	Image         string  `json:"image"`
-	QtyAval       int32   `json:"qty_aval"`
-	ShopID        int64   `json:"shop_id"`
-	CategoryID    int64   `json:"category_id"`
-	SubCategoryID int64   `json:"sub_category_id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Price         string `json:"price"`
+	Image         string `json:"image"`
+	QtyAval       int32  `json:"qty_aval"`
+	ShopID        int64  `json:"shop_id"`
+	CategoryID    int64  `json:"category_id"`
+	SubCategoryID int64  `json:"sub_category_id"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -187,9 +187,9 @@ SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_
 `
 
 type GetProductByPCSParams struct {
-	Price         float64 `json:"price"`
-	SubCategoryID int64   `json:"sub_category_id"`
-	CategoryID    int64   `json:"category_id"`
+	Price         string `json:"price"`
+	SubCategoryID int64  `json:"sub_category_id"`
+	CategoryID    int64  `json:"category_id"`
 }
 
 func (q *Queries) GetProductByPCS(ctx context.Context, arg GetProductByPCSParams) ([]Product, error) {
@@ -231,7 +231,7 @@ const getProductByPrice = `-- name: GetProductByPrice :many
 SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE price = $1 ORDER BY id
 `
 
-func (q *Queries) GetProductByPrice(ctx context.Context, price float64) ([]Product, error) {
+func (q *Queries) GetProductByPrice(ctx context.Context, price string) ([]Product, error) {
 	rows, err := q.db.QueryContext(ctx, getProductByPrice, price)
 	if err != nil {
 		return nil, err
@@ -396,7 +396,7 @@ type UpdateProductParams struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Image       string    `json:"image"`
-	Price       float64   `json:"price"`
+	Price       string    `json:"price"`
 	Description string    `json:"description"`
 	QtyAval     int32     `json:"qty_aval"`
 	UpdatedAt   time.Time `json:"updated_at"`

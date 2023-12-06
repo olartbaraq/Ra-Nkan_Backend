@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/olartbaraq/spectrumshelf/api"
+)
 
 func main() {
-	fmt.Println("Starting SpectrumShelf...")
+	api.NewServer(8000)
 }
