@@ -7,18 +7,20 @@ import (
 	"testing"
 
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgres://root:testing@localhost:5432/spectrumshelf_db?sslmode=disable"
+	"github.com/olartbaraq/spectrumshelf/utils"
 )
 
 var testQueries *db.Queries
 
 func TestMain(m *testing.M) {
 	// This function is to perform the main test.
-	conn, err := sql.Open(dbDriver, dbSource)
+
+	config, err := utils.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("Could not load env config", err)
+	}
+
+	conn, err := sql.Open(config.DBdriver, config.DBsource)
 	if err != nil {
 		log.Fatalf("There was an error connecting to database: %v", err)
 	}

@@ -36,6 +36,15 @@ func (q *Queries) CreateSubCategory(ctx context.Context, arg CreateSubCategoryPa
 	return i, err
 }
 
+const deleteAllSubCategories = `-- name: DeleteAllSubCategories :exec
+DELETE FROM sub_category
+`
+
+func (q *Queries) DeleteAllSubCategories(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllSubCategories)
+	return err
+}
+
 const deleteSubCategory = `-- name: DeleteSubCategory :exec
 DELETE FROM sub_category WHERE id = $1
 `

@@ -148,3 +148,15 @@ func TestDeleteUser(t *testing.T) {
 	assert.Empty(t, getUser)
 
 }
+
+func TestDeleteAllUser(t *testing.T) {
+	user := createRandomUser(t)
+
+	err := testQueries.DeleteAllUsers(context.Background())
+	assert.NoError(t, err)
+
+	getUser, err := testQueries.GetUserById(context.Background(), user.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getUser)
+
+}

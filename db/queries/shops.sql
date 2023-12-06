@@ -21,3 +21,6 @@ UPDATE shops SET name = $2, address = $5, phone = $4, email = $3, updated_at = $
 
 -- name: DeleteShop :exec
 DELETE FROM shops WHERE id = $1;
+
+-- name: DeleteAllShops :exec
+DELETE FROM shops;

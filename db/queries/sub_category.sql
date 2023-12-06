@@ -22,3 +22,6 @@ UPDATE sub_category SET name = $2, updated_at = $3 WHERE id = $1 RETURNING *;
 
 -- name: DeleteSubCategory :exec
 DELETE FROM sub_category WHERE id = $1;
+
+-- name: DeleteAllSubCategories :exec
+DELETE FROM sub_category;

@@ -18,3 +18,6 @@ UPDATE category SET name = $2, updated_at = $3 WHERE id = $1 RETURNING *;
 
 -- name: DeleteCategory :exec
 DELETE FROM category WHERE id = $1;
+
+-- name: DeleteAllCategories :exec
+DELETE FROM category;

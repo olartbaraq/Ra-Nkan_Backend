@@ -96,3 +96,15 @@ func TestDeleteCategory(t *testing.T) {
 	assert.Empty(t, getCategory)
 
 }
+
+func TestDeleteAllCategory(t *testing.T) {
+	category := createRandomCategory(t)
+
+	err := testQueries.DeleteAllCategories(context.Background())
+	assert.NoError(t, err)
+
+	getCategory, err := testQueries.GetCategoryById(context.Background(), category.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getCategory)
+
+}

@@ -32,7 +32,7 @@ SELECT * FROM products WHERE sub_category_id = $1 ORDER BY id;
 -- name: GetProductByCategory :many
 SELECT * FROM products WHERE category_id = $1 ORDER BY id;
 
--- name: ListAllProduct :many
+-- name: ListAllProducts :many
 SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: UpdateProduct :one
@@ -40,3 +40,6 @@ UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, imag
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;
+
+-- name: DeleteAllProducts :exec
+DELETE FROM products;

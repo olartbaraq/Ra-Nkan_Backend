@@ -118,3 +118,15 @@ func TestDeleteSUbCategory(t *testing.T) {
 	assert.Empty(t, getSubCategory)
 
 }
+
+func TestDeleteAllSUbCategory(t *testing.T) {
+	subCategory := createRandomSubCategory(t)
+
+	err := testQueries.DeleteAllSubCategories(context.Background())
+	assert.NoError(t, err)
+
+	getSubCategory, err := testQueries.GetSubCategoryById(context.Background(), subCategory.ID)
+	assert.Error(t, err)
+	assert.Empty(t, getSubCategory)
+
+}
