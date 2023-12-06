@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	api.NewServer(8000)
+	server := api.NewServer(".")
+	server.Start(8000)
 }

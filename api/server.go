@@ -2,10 +2,11 @@ package api
 
 import (
 	"database/sql"
-	_ "log"
-	_ "net/http"
+	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
 )
@@ -15,16 +16,16 @@ type Server struct {
 	router  *gin.Engine
 }
 
-func NewServer() *Server {
+func NewServer(envPath string) *Server {
 
-	config, err := utils.LoadConfig("../..")
+	config, err := utils.LoadConfig(envPath)
 	if err != nil {
-		panic("Could not load env config:")
+		panic(fmt.Sprintf("Could not load env config: %v", err))
 	}
 
 	conn, err := sql.Open(config.DBdriver, config.DBsource)
 	if err != nil {
-		panic("There was an error connecting to database")
+		panic(fmt.Sprintf("There was an error connecting to database: %v", err))
 	}
 
 	q := db.New(conn)
@@ -35,4 +36,15 @@ func NewServer() *Server {
 		queries: q,
 		router:  g,
 	}
+
+}
+
+func (s *Server) Start(port int) {
+	s.router.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{
+			"Home": "Welcome to Ra'Nkan Homepage",
+		})
+	})
+
+	s.router.Run(fmt.Sprintf(":%d", port))
 }
