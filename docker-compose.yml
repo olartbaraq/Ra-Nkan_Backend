@@ -9,3 +9,12 @@ services:
       - POSTGRES_PASSWORD=testing
     ports:
       - 5432:5432
+
+  postgres-live:
+    container_name: ra_nkan_live
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=testing
+    ports:
+      - 5433:5432

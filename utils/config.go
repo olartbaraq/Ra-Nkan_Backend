@@ -3,8 +3,9 @@ package utils
 import "github.com/spf13/viper"
 
 type Config struct {
-	DBdriver string `mapstructure:"DB_DRIVER"`
-	DBsource string `mapstructure:"DB_SOURCE"`
+	DBdriver     string `mapstructure:"DB_DRIVER"`
+	DBsource     string `mapstructure:"DB_SOURCE"`
+	DBsourceLive string `mapstructure:"DB_SOURCE_LIVE"`
 }
 
 func LoadConfig(path string) (config *Config, err error) {

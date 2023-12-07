@@ -17,9 +17,10 @@ INSERT INTO users (
     email,
     phone,
     address,
+    is_admin,
     hashed_password
 ) VALUES (
-    $1, $2, $3, $4, $5, $6) RETURNING id, lastname, firstname, hashed_password, phone, address, email, is_admin, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7) RETURNING id, lastname, firstname, hashed_password, phone, address, email, is_admin, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -28,6 +29,7 @@ type CreateUserParams struct {
 	Email          string `json:"email"`
 	Phone          string `json:"phone"`
 	Address        string `json:"address"`
+	IsAdmin        bool   `json:"is_admin"`
 	HashedPassword string `json:"hashed_password"`
 }
 
@@ -38,6 +40,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Email,
 		arg.Phone,
 		arg.Address,
+		arg.IsAdmin,
 		arg.HashedPassword,
 	)
 	var i User
