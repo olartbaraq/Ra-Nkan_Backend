@@ -30,7 +30,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-        postgres:
+        postgres_live:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: root
