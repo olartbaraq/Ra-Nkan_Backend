@@ -14,7 +14,10 @@ import (
 type Server struct {
 	queries *db.Queries
 	router  *gin.Engine
+	config  *utils.Config
 }
+
+var tokenManager *utils.JWTToken
 
 func NewServer(envPath string) *Server {
 
@@ -23,10 +26,12 @@ func NewServer(envPath string) *Server {
 		panic(fmt.Sprintf("Could not load env config: %v", err))
 	}
 
-	conn, err := sql.Open(config.DBdriver, config.DBsource)
+	conn, err := sql.Open(config.DBdriver, config.DBsourceLive)
 	if err != nil {
 		panic(fmt.Sprintf("There was an error connecting to database: %v", err))
 	}
+
+	tokenManager = utils.NewJWTToken(config)
 
 	q := db.New(conn)
 
@@ -35,6 +40,7 @@ func NewServer(envPath string) *Server {
 	return &Server{
 		queries: q,
 		router:  g,
+		config:  config,
 	}
 
 }
@@ -42,9 +48,12 @@ func NewServer(envPath string) *Server {
 func (s *Server) Start(port int) {
 	s.router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
-			"Home": "Welcome to Ra'Nkan Homepage",
+			"Home": "Welcome to Ra'Nkan Homepage...",
 		})
 	})
+
+	User{}.router(s)
+	Auth{}.router(s)
 
 	s.router.Run(fmt.Sprintf(":%d", port))
 }

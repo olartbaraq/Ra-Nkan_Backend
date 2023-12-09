@@ -5,9 +5,10 @@ INSERT INTO users (
     email,
     phone,
     address,
+    is_admin,
     hashed_password
 ) VALUES (
-    $1, $2, $3, $4, $5, $6) RETURNING *;
+    $1, $2, $3, $4, $5, $6, $7) RETURNING *;
 
 -- name: GetUserById :one
 SELECT * FROM users WHERE id = $1;

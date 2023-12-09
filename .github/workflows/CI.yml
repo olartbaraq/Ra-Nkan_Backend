@@ -30,6 +30,20 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      postgres_live:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: testing
+          POSTGRES_DB: ra_nkan_db
+        ports: 
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     
     - name: Set up Go 1.x
