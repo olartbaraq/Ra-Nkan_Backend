@@ -20,7 +20,7 @@ type User struct {
 	server *Server
 }
 
-type UserParams struct {
+type CreateUserParams struct {
 	Lastname  string `json:"lastname" binding:"required"`
 	Firstname string `json:"firstname" binding:"required"`
 	Email     string `json:"email" binding:"required,email"`
@@ -28,6 +28,14 @@ type UserParams struct {
 	Address   string `json:"address" binding:"required"`
 	Password  string `json:"password" binding:"required,min=8,passwordStrength"`
 	IsAdmin   bool   `json:"is_admin"`
+}
+
+type UpdateUserParams struct {
+	ID        int64     `json:"id" binding:"required"`
+	Email     string    `json:"email" binding:"required,email"`
+	Phone     string    `json:"phone" binding:"required,len=11"`
+	Address   string    `json:"address" binding:"required"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type UserResponse struct {
@@ -39,6 +47,7 @@ type UserResponse struct {
 	Email     string    `json:"email"`
 	IsAdmin   bool      `json:"is_admin"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type DeleteUserParam struct {
@@ -48,9 +57,10 @@ type DeleteUserParam struct {
 func (u User) router(server *Server) {
 	u.server = server
 	serverGroup := server.router.Group("/users")
-	serverGroup.GET("/allUsers", u.ListUsers)
+	serverGroup.GET("/allUsers", u.listUsers)
 	serverGroup.POST("/register", u.createUser)
-	serverGroup.DELETE("/deactivate", u.DeleteUser)
+	serverGroup.PUT("/update", u.updateUser)
+	serverGroup.DELETE("/deactivate", u.deleteUser)
 }
 
 // ValidatePassword checks if the password meets the specified criteria.
@@ -87,7 +97,7 @@ func init() {
 }
 
 func (u *User) createUser(ctx *gin.Context) {
-	user := UserParams{}
+	user := CreateUserParams{}
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		stringErr := string(err.Error())
@@ -143,6 +153,7 @@ func (u *User) createUser(ctx *gin.Context) {
 		Address:   userToSave.Address,
 		IsAdmin:   userToSave.IsAdmin,
 		CreatedAt: userToSave.CreatedAt,
+		UpdatedAt: userToSave.UpdatedAt,
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
@@ -187,7 +198,7 @@ func handleUniqueConstraintError(ctx *gin.Context, pqErr *pq.Error) {
 	}
 }
 
-func (u *User) ListUsers(ctx *gin.Context) {
+func (u *User) listUsers(ctx *gin.Context) {
 
 	arg := db.ListAllUsersParams{
 		Limit:  10,
@@ -228,7 +239,7 @@ func (u *User) ListUsers(ctx *gin.Context) {
 	})
 }
 
-func (u *User) DeleteUser(ctx *gin.Context) {
+func (u *User) deleteUser(ctx *gin.Context) {
 
 	id := DeleteUserParam{}
 
@@ -251,5 +262,50 @@ func (u *User) DeleteUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusAccepted, gin.H{
 		"status":  "success",
 		"message": "user deactivated sucessfully",
+	})
+}
+
+func (u *User) updateUser(ctx *gin.Context) {
+
+	user := UpdateUserParams{}
+
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	arg := db.UpdateUserParams{
+		ID:        user.ID,
+		Email:     user.Email,
+		Phone:     user.Phone,
+		Address:   user.Address,
+		UpdatedAt: time.Now(),
+	}
+
+	userToUpdate, err := u.server.queries.UpdateUser(context.Background(), arg)
+
+	if err != nil {
+		handleCreateUserError(ctx, err)
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:        userToUpdate.ID,
+		Lastname:  userToUpdate.Lastname,
+		Firstname: userToUpdate.Firstname,
+		Email:     userToUpdate.Email,
+		Phone:     userToUpdate.Phone,
+		Address:   userToUpdate.Address,
+		IsAdmin:   userToUpdate.IsAdmin,
+		CreatedAt: userToUpdate.CreatedAt,
+		UpdatedAt: userToUpdate.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"status":  "success",
+		"message": "user updated successfully",
+		"data":    userResponse,
 	})
 }
