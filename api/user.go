@@ -2,16 +2,13 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
-	"github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
 )
@@ -56,149 +53,50 @@ type DeleteUserParam struct {
 
 func (u User) router(server *Server) {
 	u.server = server
-	serverGroup := server.router.Group("/users")
+	serverGroup := server.router.Group("/users", AuthenticatedMiddleware())
 	serverGroup.GET("/allUsers", u.listUsers)
-	serverGroup.POST("/register", u.createUser)
 	serverGroup.PUT("/update", u.updateUser)
 	serverGroup.DELETE("/deactivate", u.deleteUser)
+	serverGroup.GET("/profile", u.userProfile)
 }
 
-// ValidatePassword checks if the password meets the specified criteria.
-func ValidatePassword(fl validator.FieldLevel) bool {
-	password := fl.Field().String()
-
-	// Check if the password is at least 8 characters long
-	if utf8.RuneCountInString(password) < 8 {
-		return false
+func extractTokenFromRequest(ctx *gin.Context) (string, error) {
+	// Extract the token from the Authorization header
+	authorizationHeader := ctx.GetHeader("Authorization")
+	if authorizationHeader == "" {
+		return "", errors.New("unauthorized request")
 	}
 
-	// Check if the password contains at least one digit and one symbol
-	hasDigit := false
-	hasSymbol := false
-	hasUpper := false
-	for _, char := range password {
-		if unicode.IsDigit(char) {
-			hasDigit = true
-		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
-			hasSymbol = true
-		} else if unicode.IsUpper(char) {
-			hasUpper = true
-		}
+	// Expecting the header to be in the format "Bearer <token>"
+	headerParts := strings.Split(authorizationHeader, " ")
+	if len(headerParts) != 2 && strings.ToLower(headerParts[0]) != "bearer" {
+		return "", errors.New("invalid token format")
 	}
 
-	return hasDigit && hasSymbol && hasUpper
-}
-
-// Register the custom validation function
-func init() {
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("passwordStrength", ValidatePassword)
-	}
-}
-
-func (u *User) createUser(ctx *gin.Context) {
-	user := CreateUserParams{}
-
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		stringErr := string(err.Error())
-		if strings.Contains(stringErr, "passwordStrength") {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error": `
-						"Password must be minimum of 8 characters",
-						"Password must be contain at least a number",
-						"Password must be contain at least a symbol",
-						"Password must be contain a upper case letter"
-						`,
-			})
-			return
-		}
-
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
-		})
-		return
-	}
-
-	hashedPassword, err := utils.GenerateHashPassword(user.Password)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"Error": err.Error(),
-		})
-		return
-	}
-
-	arg := db.CreateUserParams{
-		Lastname:       user.Lastname,
-		Firstname:      user.Firstname,
-		Email:          user.Email,
-		Phone:          user.Phone,
-		Address:        user.Address,
-		IsAdmin:        user.IsAdmin,
-		HashedPassword: hashedPassword,
-	}
-
-	userToSave, err := u.server.queries.CreateUser(context.Background(), arg)
-
-	if err != nil {
-		handleCreateUserError(ctx, err)
-		return
-	}
-
-	userResponse := UserResponse{
-		ID:        userToSave.ID,
-		Lastname:  userToSave.Lastname,
-		Firstname: userToSave.Firstname,
-		Email:     userToSave.Email,
-		Phone:     userToSave.Phone,
-		Address:   userToSave.Address,
-		IsAdmin:   userToSave.IsAdmin,
-		CreatedAt: userToSave.CreatedAt,
-		UpdatedAt: userToSave.UpdatedAt,
-	}
-
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"message": "user created successfully",
-		"data":    userResponse,
-	})
-}
-
-func handleCreateUserError(ctx *gin.Context, err error) {
-	if pqErr, ok := err.(*pq.Error); ok {
-		switch pqErr.Code {
-		case "23505":
-			// to check for unique constraint
-			handleUniqueConstraintError(ctx, pqErr)
-		default:
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"Error": err.Error(),
-			})
-		}
-	} else {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"Error": err.Error(),
-		})
-	}
-}
-
-func handleUniqueConstraintError(ctx *gin.Context, pqErr *pq.Error) {
-	stringErr := string(pqErr.Detail)
-	if strings.Contains(stringErr, "phone") {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "User with phone number already exists",
-		})
-	} else if strings.Contains(stringErr, "email") {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "User with email address already exists",
-		})
-	} else {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"Error": "Duplicate key violation",
-		})
-	}
+	return headerParts[1], nil
 }
 
 func (u *User) listUsers(ctx *gin.Context) {
+
+	tokenString, err := extractTokenFromRequest(ctx)
+
+	if err != nil || tokenString == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: Missing or invalid token",
+		})
+		return
+	}
+
+	_, role, err := tokenManager.VerifyToken(tokenString)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":  err.Error(),
+			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
 
 	arg := db.ListAllUsersParams{
 		Limit:  10,
@@ -211,6 +109,14 @@ func (u *User) listUsers(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"Error": err.Error(),
 		})
+		return
+	}
+
+	if role != utils.AdminRole {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		ctx.Abort()
 		return
 	}
 
@@ -234,7 +140,7 @@ func (u *User) listUsers(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "users fetched sucessfully",
+		"message": "all users fetched sucessfully",
 		"data":    allUsers,
 	})
 }
@@ -266,6 +172,25 @@ func (u *User) deleteUser(ctx *gin.Context) {
 }
 
 func (u *User) updateUser(ctx *gin.Context) {
+	tokenString, err := extractTokenFromRequest(ctx)
+
+	if err != nil || tokenString == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: Missing or invalid token",
+		})
+		return
+	}
+
+	userID, _, err := tokenManager.VerifyToken(tokenString)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":  err.Error(),
+			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
 
 	user := UpdateUserParams{}
 
@@ -291,6 +216,13 @@ func (u *User) updateUser(ctx *gin.Context) {
 		return
 	}
 
+	if userID != userToUpdate.ID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: invalid token",
+		})
+		return
+	}
+
 	userResponse := UserResponse{
 		ID:        userToUpdate.ID,
 		Lastname:  userToUpdate.Lastname,
@@ -306,6 +238,62 @@ func (u *User) updateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusAccepted, gin.H{
 		"status":  "success",
 		"message": "user updated successfully",
+		"data":    userResponse,
+	})
+}
+
+func (u *User) userProfile(ctx *gin.Context) {
+	value, exist := ctx.Get("id")
+
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  exist,
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	userId, ok := value.(int64)
+
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  exist,
+			"message": "Issue Encountered, try again later",
+		})
+		return
+	}
+
+	user, err := u.server.queries.GetUserById(context.Background(), userId)
+
+	if err == sql.ErrNoRows {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"Error":   err.Error(),
+			"message": "Unauthorized",
+		})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":   err.Error(),
+			"message": "Issue Encountered, try again later",
+		})
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:        user.ID,
+		Lastname:  user.Lastname,
+		Firstname: user.Firstname,
+		Email:     user.Email,
+		Phone:     user.Phone,
+		Address:   user.Address,
+		IsAdmin:   user.IsAdmin,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "user fetched successfully",
 		"data":    userResponse,
 	})
 }

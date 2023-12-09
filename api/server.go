@@ -17,6 +17,8 @@ type Server struct {
 	config  *utils.Config
 }
 
+var tokenManager *utils.JWTToken
+
 func NewServer(envPath string) *Server {
 
 	config, err := utils.LoadConfig(envPath)
@@ -28,6 +30,8 @@ func NewServer(envPath string) *Server {
 	if err != nil {
 		panic(fmt.Sprintf("There was an error connecting to database: %v", err))
 	}
+
+	tokenManager = utils.NewJWTToken(config)
 
 	q := db.New(conn)
 

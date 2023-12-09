@@ -7,6 +7,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type JWTToken struct {
+	config *Config
+}
+
 type jwtCustomClaim struct {
 	Id        int64  `json:"id"`
 	IsAdmin   bool   `json:"is_admin"`
@@ -20,7 +24,11 @@ const (
 	StandardRole = "standard"
 )
 
-func CreateToken(userID int64, isAdmin bool, signingKey string) (string, error) {
+func NewJWTToken(config *Config) *JWTToken {
+	return &JWTToken{config: config}
+}
+
+func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
 
 	var role string
 
@@ -38,7 +46,7 @@ func CreateToken(userID int64, isAdmin bool, signingKey string) (string, error) 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(signingKey))
+	tokenString, err := token.SignedString([]byte(j.config.SigningKey))
 
 	if err != nil {
 		return "", err
@@ -46,12 +54,12 @@ func CreateToken(userID int64, isAdmin bool, signingKey string) (string, error) 
 	return string(tokenString), nil
 }
 
-func VerifyToken(tokenString, signingKey string) (int64, string, error) {
+func (j *JWTToken) VerifyToken(tokenString string) (int64, string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &jwtCustomClaim{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid authentication token")
 		}
-		return []byte(signingKey), nil
+		return []byte(j.config.SigningKey), nil
 	})
 
 	if err != nil {

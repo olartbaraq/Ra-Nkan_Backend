@@ -4,8 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator"
+	"github.com/lib/pq"
+	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
 )
 
@@ -23,7 +30,143 @@ func (a Auth) router(server *Server) {
 	a.server = server
 
 	serverGroup := server.router.Group("/auth")
+	serverGroup.POST("/register", a.register)
 	serverGroup.POST("/login", a.login)
+}
+
+// ValidatePassword checks if the password meets the specified criteria.
+func ValidatePassword(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
+
+	// Check if the password is at least 8 characters long
+	if utf8.RuneCountInString(password) < 8 {
+		return false
+	}
+
+	// Check if the password contains at least one digit and one symbol
+	hasDigit := false
+	hasSymbol := false
+	hasUpper := false
+	for _, char := range password {
+		if unicode.IsDigit(char) {
+			hasDigit = true
+		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
+			hasSymbol = true
+		} else if unicode.IsUpper(char) {
+			hasUpper = true
+		}
+	}
+
+	return hasDigit && hasSymbol && hasUpper
+}
+
+// Register the custom validation function
+func init() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("passwordStrength", ValidatePassword)
+	}
+}
+
+func (a *Auth) register(ctx *gin.Context) {
+	user := CreateUserParams{}
+
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		stringErr := string(err.Error())
+		if strings.Contains(stringErr, "passwordStrength") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Error": `
+						"Password must be minimum of 8 characters",
+						"Password must be contain at least a number",
+						"Password must be contain at least a symbol",
+						"Password must be contain a upper case letter"
+						`,
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	hashedPassword, err := utils.GenerateHashPassword(user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	arg := db.CreateUserParams{
+		Lastname:       user.Lastname,
+		Firstname:      user.Firstname,
+		Email:          user.Email,
+		Phone:          user.Phone,
+		Address:        user.Address,
+		IsAdmin:        user.IsAdmin,
+		HashedPassword: hashedPassword,
+	}
+
+	userToSave, err := a.server.queries.CreateUser(context.Background(), arg)
+
+	if err != nil {
+		handleCreateUserError(ctx, err)
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:        userToSave.ID,
+		Lastname:  userToSave.Lastname,
+		Firstname: userToSave.Firstname,
+		Email:     userToSave.Email,
+		Phone:     userToSave.Phone,
+		Address:   userToSave.Address,
+		IsAdmin:   userToSave.IsAdmin,
+		CreatedAt: userToSave.CreatedAt,
+		UpdatedAt: userToSave.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
+		"message": "user created successfully",
+		"data":    userResponse,
+	})
+}
+
+func handleCreateUserError(ctx *gin.Context, err error) {
+	if pqErr, ok := err.(*pq.Error); ok {
+		switch pqErr.Code {
+		case "23505":
+			// to check for unique constraint
+			handleUniqueConstraintError(ctx, pqErr)
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"Error": err.Error(),
+			})
+		}
+	} else {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+	}
+}
+
+func handleUniqueConstraintError(ctx *gin.Context, pqErr *pq.Error) {
+	stringErr := string(pqErr.Detail)
+	if strings.Contains(stringErr, "phone") {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "User with phone number already exists",
+		})
+	} else if strings.Contains(stringErr, "email") {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "User with email address already exists",
+		})
+	} else {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": "Duplicate key violation",
+		})
+	}
 }
 
 func (a Auth) login(ctx *gin.Context) {
@@ -60,7 +203,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := utils.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config.SigningKey)
+	token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
