@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
 )
@@ -23,7 +26,7 @@ type CreateUserParams struct {
 	Email     string `json:"email" binding:"required,email"`
 	Phone     string `json:"phone" binding:"required,len=11"`
 	Address   string `json:"address" binding:"required"`
-	Password  string `json:"password" binding:"required,min=8,passwordStrength"`
+	Password  string `json:"password" binding:"required,min=8" validate:"passwordStrength"`
 	IsAdmin   bool   `json:"is_admin"`
 }
 
@@ -32,6 +35,12 @@ type UpdateUserParams struct {
 	Email     string    `json:"email" binding:"required,email"`
 	Phone     string    `json:"phone" binding:"required,len=11"`
 	Address   string    `json:"address" binding:"required"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type UpdateUserPasswordParams struct {
+	ID        int64     `json:"id" binding:"required"`
+	Password  string    `json:"password" binding:"required,min=8" validate:"passwordStrength"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
@@ -56,6 +65,7 @@ func (u User) router(server *Server) {
 	serverGroup := server.router.Group("/users", AuthenticatedMiddleware())
 	serverGroup.GET("/allUsers", u.listUsers)
 	serverGroup.PUT("/update", u.updateUser)
+	serverGroup.PUT("/update/password", u.updatePassword)
 	serverGroup.DELETE("/deactivate", u.deleteUser)
 	serverGroup.GET("/profile", u.userProfile)
 }
@@ -76,23 +86,72 @@ func extractTokenFromRequest(ctx *gin.Context) (string, error) {
 	return headerParts[1], nil
 }
 
+func returnIdRole(tokenString string) (int64, string, error) {
+
+	if tokenString == "" {
+		return 0, "", errors.New("unauthorized: Missing or invalid token")
+	}
+
+	userId, role, err := tokenManager.VerifyToken(tokenString)
+
+	if err != nil {
+		return 0, "", errors.New("failed to verify token")
+	}
+
+	return userId, role, nil
+}
+
+// ValidatePassword checks if the password meets the specified criteria.
+func ValidatePassword(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
+
+	// Check if the password is at least 8 characters long
+	if utf8.RuneCountInString(password) < 8 {
+		return false
+	}
+
+	// Check if the password contains at least one digit and one symbol
+	hasDigit := false
+	hasSymbol := false
+	hasUpper := false
+	for _, char := range password {
+		if unicode.IsDigit(char) {
+			hasDigit = true
+		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
+			hasSymbol = true
+		} else if unicode.IsUpper(char) {
+			hasUpper = true
+		}
+	}
+
+	return hasDigit && hasSymbol && hasUpper
+}
+
 func (u *User) listUsers(ctx *gin.Context) {
 
 	tokenString, err := extractTokenFromRequest(ctx)
 
-	if err != nil || tokenString == "" {
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Unauthorized: Missing or invalid token",
 		})
 		return
 	}
 
-	_, role, err := tokenManager.VerifyToken(tokenString)
+	_, role, err := returnIdRole(tokenString)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"Error":  err.Error(),
 			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
+
+	if role != utils.AdminRole {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
 		})
 		ctx.Abort()
 		return
@@ -109,14 +168,6 @@ func (u *User) listUsers(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"Error": err.Error(),
 		})
-		return
-	}
-
-	if role != utils.AdminRole {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Unauthorized",
-		})
-		ctx.Abort()
 		return
 	}
 
@@ -147,7 +198,36 @@ func (u *User) listUsers(ctx *gin.Context) {
 
 func (u *User) deleteUser(ctx *gin.Context) {
 
+	tokenString, err := extractTokenFromRequest(ctx)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: Missing or invalid token",
+		})
+		ctx.Abort()
+		return
+	}
+
+	userId, _, err := returnIdRole(tokenString)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":  err.Error(),
+			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
+
 	id := DeleteUserParam{}
+
+	if userId != id.ID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: invalid token",
+		})
+		ctx.Abort()
+		return
+	}
 
 	if err := ctx.ShouldBindJSON(&id); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -156,7 +236,7 @@ func (u *User) deleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := u.server.queries.DeleteUser(context.Background(), id.ID)
+	err = u.server.queries.DeleteUser(context.Background(), id.ID)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -172,16 +252,17 @@ func (u *User) deleteUser(ctx *gin.Context) {
 }
 
 func (u *User) updateUser(ctx *gin.Context) {
+
 	tokenString, err := extractTokenFromRequest(ctx)
 
-	if err != nil || tokenString == "" {
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Unauthorized: Missing or invalid token",
 		})
 		return
 	}
 
-	userID, _, err := tokenManager.VerifyToken(tokenString)
+	userId, _, err := returnIdRole(tokenString)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -201,6 +282,14 @@ func (u *User) updateUser(ctx *gin.Context) {
 		return
 	}
 
+	if userId != user.ID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: invalid token",
+		})
+		ctx.Abort()
+		return
+	}
+
 	arg := db.UpdateUserParams{
 		ID:        user.ID,
 		Email:     user.Email,
@@ -213,13 +302,6 @@ func (u *User) updateUser(ctx *gin.Context) {
 
 	if err != nil {
 		handleCreateUserError(ctx, err)
-		return
-	}
-
-	if userID != userToUpdate.ID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized: invalid token",
-		})
 		return
 	}
 
@@ -294,6 +376,101 @@ func (u *User) userProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "user fetched successfully",
+		"data":    userResponse,
+	})
+}
+
+func (u *User) updatePassword(ctx *gin.Context) {
+
+	tokenString, err := extractTokenFromRequest(ctx)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: Missing or invalid token",
+		})
+		return
+	}
+
+	userId, _, err := returnIdRole(tokenString)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":  err.Error(),
+			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
+
+	user := UpdateUserPasswordParams{}
+
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		stringErr := string(err.Error())
+		if strings.Contains(stringErr, "passwordStrength") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Error": `
+						"Password must be minimum of 8 characters",
+						"Password must be contain at least a number",
+						"Password must be contain at least a symbol",
+						"Password must be contain a upper case letter"
+						`,
+			})
+			ctx.Abort()
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	if userId != user.ID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: invalid token",
+		})
+		ctx.Abort()
+		return
+	}
+
+	hashedPassword, err := utils.GenerateHashPassword(user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	arg := db.UpdateUserPasswordParams{
+		ID:             user.ID,
+		HashedPassword: hashedPassword,
+		UpdatedAt:      time.Now(),
+	}
+
+	userToUpdatePassword, err := u.server.queries.UpdateUserPassword(context.Background(), arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:        userToUpdatePassword.ID,
+		Lastname:  userToUpdatePassword.Lastname,
+		Firstname: userToUpdatePassword.Firstname,
+		Email:     userToUpdatePassword.Email,
+		Phone:     userToUpdatePassword.Phone,
+		Address:   userToUpdatePassword.Address,
+		IsAdmin:   userToUpdatePassword.IsAdmin,
+		CreatedAt: userToUpdatePassword.CreatedAt,
+		UpdatedAt: userToUpdatePassword.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"status":  "success",
+		"message": "password updated successfully",
 		"data":    userResponse,
 	})
 }
