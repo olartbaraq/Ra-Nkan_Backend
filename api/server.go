@@ -57,6 +57,7 @@ func (s *Server) Start(port int) {
 	User{}.router(s)
 	Auth{}.router(s)
 	Category{}.router(s)
+	SubCategory{}.router(s)
 
 	s.router.Run(fmt.Sprintf(":%d", port))
 }

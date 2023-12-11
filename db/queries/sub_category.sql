@@ -1,9 +1,10 @@
 -- name: CreateSubCategory :one
 INSERT INTO sub_category (
     name,
-    category_id
+    category_id,
+    category_name
 ) VALUES (
-    $1, $2) RETURNING *;
+    $1, $2, $3) RETURNING *;
 
 -- name: GetSubCategoryById :one
 SELECT * FROM sub_category WHERE id = $1;

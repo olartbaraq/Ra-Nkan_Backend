@@ -21,7 +21,7 @@ INSERT INTO products (
     category_id,
     sub_category_id
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at
 `
 
 type CreateProductParams struct {
@@ -56,7 +56,9 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.QtyAval,
 		&i.ShopID,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.SubCategoryID,
+		&i.SubCategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -82,7 +84,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 const getProductByCategory = `-- name: GetProductByCategory :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE category_id = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE category_id = $1 ORDER BY id
 `
 
 func (q *Queries) GetProductByCategory(ctx context.Context, categoryID int64) ([]Product, error) {
@@ -103,7 +105,9 @@ func (q *Queries) GetProductByCategory(ctx context.Context, categoryID int64) ([
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -121,7 +125,7 @@ func (q *Queries) GetProductByCategory(ctx context.Context, categoryID int64) ([
 }
 
 const getProductById = `-- name: GetProductById :one
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE id = $1
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE id = $1
 `
 
 func (q *Queries) GetProductById(ctx context.Context, id int64) (Product, error) {
@@ -136,7 +140,9 @@ func (q *Queries) GetProductById(ctx context.Context, id int64) (Product, error)
 		&i.QtyAval,
 		&i.ShopID,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.SubCategoryID,
+		&i.SubCategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -144,7 +150,7 @@ func (q *Queries) GetProductById(ctx context.Context, id int64) (Product, error)
 }
 
 const getProductByName = `-- name: GetProductByName :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE name = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE name = $1 ORDER BY id
 `
 
 func (q *Queries) GetProductByName(ctx context.Context, name string) ([]Product, error) {
@@ -165,7 +171,9 @@ func (q *Queries) GetProductByName(ctx context.Context, name string) ([]Product,
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -183,7 +191,7 @@ func (q *Queries) GetProductByName(ctx context.Context, name string) ([]Product,
 }
 
 const getProductByPCS = `-- name: GetProductByPCS :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE price = $1 AND sub_category_id = $2 AND category_id = $3 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE price = $1 AND sub_category_id = $2 AND category_id = $3 ORDER BY id
 `
 
 type GetProductByPCSParams struct {
@@ -210,7 +218,9 @@ func (q *Queries) GetProductByPCS(ctx context.Context, arg GetProductByPCSParams
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -228,7 +238,7 @@ func (q *Queries) GetProductByPCS(ctx context.Context, arg GetProductByPCSParams
 }
 
 const getProductByPrice = `-- name: GetProductByPrice :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE price = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE price = $1 ORDER BY id
 `
 
 func (q *Queries) GetProductByPrice(ctx context.Context, price string) ([]Product, error) {
@@ -249,7 +259,9 @@ func (q *Queries) GetProductByPrice(ctx context.Context, price string) ([]Produc
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -267,7 +279,7 @@ func (q *Queries) GetProductByPrice(ctx context.Context, price string) ([]Produc
 }
 
 const getProductByShop = `-- name: GetProductByShop :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE shop_id = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE shop_id = $1 ORDER BY id
 `
 
 func (q *Queries) GetProductByShop(ctx context.Context, shopID int64) ([]Product, error) {
@@ -288,7 +300,9 @@ func (q *Queries) GetProductByShop(ctx context.Context, shopID int64) ([]Product
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -306,7 +320,7 @@ func (q *Queries) GetProductByShop(ctx context.Context, shopID int64) ([]Product
 }
 
 const getProductBySubCategory = `-- name: GetProductBySubCategory :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products WHERE sub_category_id = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE sub_category_id = $1 ORDER BY id
 `
 
 func (q *Queries) GetProductBySubCategory(ctx context.Context, subCategoryID int64) ([]Product, error) {
@@ -327,7 +341,9 @@ func (q *Queries) GetProductBySubCategory(ctx context.Context, subCategoryID int
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -345,7 +361,7 @@ func (q *Queries) GetProductBySubCategory(ctx context.Context, subCategoryID int
 }
 
 const listAllProducts = `-- name: ListAllProducts :many
-SELECT id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at FROM products ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListAllProductsParams struct {
@@ -371,7 +387,9 @@ func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams
 			&i.QtyAval,
 			&i.ShopID,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.SubCategoryID,
+			&i.SubCategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -389,7 +407,7 @@ func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams
 }
 
 const updateProduct = `-- name: UpdateProduct :one
-UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, sub_category_id, created_at, updated_at
+UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at
 `
 
 type UpdateProductParams struct {
@@ -422,7 +440,9 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.QtyAval,
 		&i.ShopID,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.SubCategoryID,
+		&i.SubCategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
