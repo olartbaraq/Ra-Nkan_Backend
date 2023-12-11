@@ -20,6 +20,16 @@ db_down:
 	docker exec -it spectrumshelf_postgres dropdb --username=root spectrumshelf_db
 	docker exec -it ra_nkan_live dropdb --username=root ra_nkan_db
 
+dock_start:
+	#start the docker processes
+	docker start spectrumshelf_postgres
+	docker start ra_nkan_live
+
+dock_stop:
+	#stop the docker processes
+	docker stop spectrumshelf_postgres
+	docker stop ra_nkan_live
+
 m_up:
 	#run a migration to the database
 	migrate -path db/migrations -database "postgres://root:testing@localhost:5432/spectrumshelf_db?sslmode=disable" up
