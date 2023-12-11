@@ -292,7 +292,7 @@ func (u *User) updateUser(ctx *gin.Context) {
 
 	arg := db.UpdateUserParams{
 		ID:        user.ID,
-		Email:     user.Email,
+		Email:     strings.ToLower(user.Email),
 		Phone:     user.Phone,
 		Address:   user.Address,
 		UpdatedAt: time.Now(),

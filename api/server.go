@@ -21,7 +21,7 @@ var tokenManager *utils.JWTToken
 
 func NewServer(envPath string) *Server {
 
-	config, err := utils.LoadConfig(envPath)
+	config, err := utils.LoadDBConfig(envPath)
 	if err != nil {
 		panic(fmt.Sprintf("Could not load env config: %v", err))
 	}

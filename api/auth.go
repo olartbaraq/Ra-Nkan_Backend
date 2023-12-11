@@ -73,7 +73,7 @@ func (a *Auth) register(ctx *gin.Context) {
 	arg := db.CreateUserParams{
 		Lastname:       user.Lastname,
 		Firstname:      user.Firstname,
-		Email:          user.Email,
+		Email:          strings.ToLower(user.Email),
 		Phone:          user.Phone,
 		Address:        user.Address,
 		IsAdmin:        user.IsAdmin,
@@ -151,7 +151,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	dbUser, err := a.server.queries.GetUserByEmail(context.Background(), userToLogin.Email)
+	dbUser, err := a.server.queries.GetUserByEmail(context.Background(), strings.ToLower(userToLogin.Email))
 
 	if err == sql.ErrNoRows {
 		ctx.JSON(http.StatusNotFound, gin.H{

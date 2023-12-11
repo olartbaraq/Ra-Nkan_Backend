@@ -21,7 +21,7 @@
 go.work
 
 # Env files
-env.env
+app.env
 .env
 .env.development.local
 .env.test.local
