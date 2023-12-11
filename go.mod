@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/gin-contrib/cors v1.5.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/markbates/goth v1.78.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect

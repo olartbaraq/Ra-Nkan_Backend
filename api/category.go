@@ -34,7 +34,7 @@ func (c Category) router(server *Server) {
 	serverGroup := server.router.Group("/category", AuthenticatedMiddleware())
 	serverGroup.POST("/create_category", c.createCategory)
 	serverGroup.POST("/search_category", c.searchCategory)
-	serverGroup.GET("/get_category", c.getCategory)
+	serverGroup.GET("/list_categories", c.listCategories)
 }
 
 func (c *Category) createCategory(ctx *gin.Context) {
@@ -176,7 +176,7 @@ func (c *Category) searchCategory(ctx *gin.Context) {
 	})
 }
 
-func (c *Category) getCategory(ctx *gin.Context) {
+func (c *Category) listCategories(ctx *gin.Context) {
 
 	tokenString, err := extractTokenFromRequest(ctx)
 
