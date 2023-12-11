@@ -19,20 +19,24 @@ INSERT INTO products (
     qty_aval,
     shop_id,
     category_id,
-    sub_category_id
+    category_name,
+    sub_category_id,
+    sub_category_name
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, name, description, price, image, qty_aval, shop_id, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at
 `
 
 type CreateProductParams struct {
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Price         string `json:"price"`
-	Image         string `json:"image"`
-	QtyAval       int32  `json:"qty_aval"`
-	ShopID        int64  `json:"shop_id"`
-	CategoryID    int64  `json:"category_id"`
-	SubCategoryID int64  `json:"sub_category_id"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Price           string `json:"price"`
+	Image           string `json:"image"`
+	QtyAval         int32  `json:"qty_aval"`
+	ShopID          int64  `json:"shop_id"`
+	CategoryID      int64  `json:"category_id"`
+	CategoryName    string `json:"category_name"`
+	SubCategoryID   int64  `json:"sub_category_id"`
+	SubCategoryName string `json:"sub_category_name"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -44,7 +48,9 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		arg.QtyAval,
 		arg.ShopID,
 		arg.CategoryID,
+		arg.CategoryName,
 		arg.SubCategoryID,
+		arg.SubCategoryName,
 	)
 	var i Product
 	err := row.Scan(

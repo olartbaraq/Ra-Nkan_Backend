@@ -7,9 +7,11 @@ INSERT INTO products (
     qty_aval,
     shop_id,
     category_id,
-    sub_category_id
+    category_name,
+    sub_category_id,
+    sub_category_name
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
 
 -- name: GetProductById :one
 SELECT * FROM products WHERE id = $1;

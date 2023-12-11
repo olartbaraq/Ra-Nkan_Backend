@@ -18,14 +18,16 @@ func createRandomProduct(t *testing.T) db.Product {
 	sub_category := createRandomSubCategory(t)
 
 	arg := db.CreateProductParams{
-		Name:          utils.RandomName(),
-		Description:   utils.RandomText(),
-		Price:         utils.RandomPrice(),
-		Image:         "https://imagesget.com",
-		QtyAval:       utils.RandomQty(),
-		ShopID:        shop.ID,
-		CategoryID:    category.ID,
-		SubCategoryID: sub_category.ID,
+		Name:            utils.RandomName(),
+		Description:     utils.RandomText(),
+		Price:           utils.RandomPrice(),
+		Image:           "https://imagesget.com",
+		QtyAval:         utils.RandomQty(),
+		ShopID:          shop.ID,
+		CategoryID:      category.ID,
+		CategoryName:    category.Name,
+		SubCategoryID:   sub_category.ID,
+		SubCategoryName: sub_category.Name,
 	}
 
 	product, err := testQueries.CreateProduct(context.Background(), arg)
@@ -45,14 +47,16 @@ func TestCreateProduct(t *testing.T) {
 	productTemplate := createRandomProduct(t)
 
 	product, err := testQueries.CreateProduct(context.Background(), db.CreateProductParams{
-		Name:          productTemplate.Name,
-		Price:         productTemplate.Price,
-		Description:   productTemplate.Description,
-		Image:         productTemplate.Image,
-		QtyAval:       productTemplate.QtyAval,
-		ShopID:        productTemplate.ShopID,
-		CategoryID:    productTemplate.CategoryID,
-		SubCategoryID: productTemplate.SubCategoryID,
+		Name:            productTemplate.Name,
+		Price:           productTemplate.Price,
+		Description:     productTemplate.Description,
+		Image:           productTemplate.Image,
+		QtyAval:         productTemplate.QtyAval,
+		ShopID:          productTemplate.ShopID,
+		CategoryID:      productTemplate.CategoryID,
+		CategoryName:    productTemplate.CategoryName,
+		SubCategoryID:   productTemplate.SubCategoryID,
+		SubCategoryName: productTemplate.SubCategoryName,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, product)
