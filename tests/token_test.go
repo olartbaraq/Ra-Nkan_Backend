@@ -14,7 +14,7 @@ type Params struct {
 }
 
 func returnJWT() *utils.JWTToken {
-	config, err := utils.LoadConfig("..")
+	config, err := utils.LoadDBConfig("..")
 	if err != nil {
 		panic(fmt.Sprintf("Could not load env config: %v", err))
 	}

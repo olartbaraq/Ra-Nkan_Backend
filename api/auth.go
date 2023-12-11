@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"net/http"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -32,32 +30,6 @@ func (a Auth) router(server *Server) {
 	serverGroup := server.router.Group("/auth")
 	serverGroup.POST("/register", a.register)
 	serverGroup.POST("/login", a.login)
-}
-
-// ValidatePassword checks if the password meets the specified criteria.
-func ValidatePassword(fl validator.FieldLevel) bool {
-	password := fl.Field().String()
-
-	// Check if the password is at least 8 characters long
-	if utf8.RuneCountInString(password) < 8 {
-		return false
-	}
-
-	// Check if the password contains at least one digit and one symbol
-	hasDigit := false
-	hasSymbol := false
-	hasUpper := false
-	for _, char := range password {
-		if unicode.IsDigit(char) {
-			hasDigit = true
-		} else if unicode.IsPunct(char) || unicode.IsSymbol(char) {
-			hasSymbol = true
-		} else if unicode.IsUpper(char) {
-			hasUpper = true
-		}
-	}
-
-	return hasDigit && hasSymbol && hasUpper
 }
 
 // Register the custom validation function
@@ -101,7 +73,7 @@ func (a *Auth) register(ctx *gin.Context) {
 	arg := db.CreateUserParams{
 		Lastname:       user.Lastname,
 		Firstname:      user.Firstname,
-		Email:          user.Email,
+		Email:          strings.ToLower(user.Email),
 		Phone:          user.Phone,
 		Address:        user.Address,
 		IsAdmin:        user.IsAdmin,
@@ -179,7 +151,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	dbUser, err := a.server.queries.GetUserByEmail(context.Background(), userToLogin.Email)
+	dbUser, err := a.server.queries.GetUserByEmail(context.Background(), strings.ToLower(userToLogin.Email))
 
 	if err == sql.ErrNoRows {
 		ctx.JSON(http.StatusNotFound, gin.H{
