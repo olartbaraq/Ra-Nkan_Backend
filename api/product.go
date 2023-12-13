@@ -2,12 +2,10 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
 )
@@ -20,7 +18,7 @@ type CreateProductParams struct {
 	Name            string `json:"name" binding:"required"`
 	Description     string `json:"description" binding:"required"`
 	Price           string `json:"price" binding:"required,numeric"`
-	Image           string `json:"image_url" binding:"required,url" validate:"isImageURL"`
+	Image           string `json:"image_url" binding:"required,url,isImageURL"`
 	QtyAval         int32  `json:"qty_aval" binding:"required"`
 	ShopID          int64  `json:"shop_id" binding:"required"`
 	ShopName        string `json:"shop_name" binding:"required"`
@@ -73,22 +71,17 @@ func (p *Product) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	V = validator.New()
-	V.RegisterValidation("isImageURL", ImageURLValidation)
-
 	product := CreateProductParams{}
 
 	if err := ctx.ShouldBindJSON(&product); err != nil {
-		fmt.Println(err.Error())
-		if err := V.Struct(product); err != nil {
-			stringErr := string(err.Error())
-			//fmt.Println(stringErr)
-			if strings.Contains(stringErr, "isImageURL") {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"Error": incorrectImageResp,
-				})
-				return
-			}
+		//fmt.Println(err.Error())
+		stringErr := string(err.Error())
+		//fmt.Println(stringErr)
+		if strings.Contains(stringErr, "isImageURL") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"Error": incorrectImageResp,
+			})
+			return
 
 		}
 		ctx.JSON(http.StatusBadRequest, gin.H{

@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -48,6 +50,13 @@ func NewServer(envPath string) *Server {
 }
 
 func (s *Server) Start(port int) {
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+
+		v.RegisterValidation("passwordStrength", ValidatePassword)
+		v.RegisterValidation("isImageURL", ImageURLValidation)
+	}
+
 	s.router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Home": "Welcome to Ra'Nkan Homepage...",

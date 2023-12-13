@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,8 +13,8 @@ import (
 )
 
 // ValidatePassword checks if the password meets the specified criteria.
-func ValidatePassword(fl validator.FieldLevel) bool {
-	password := fl.Field().String()
+var ValidatePassword validator.Func = func(fl validator.FieldLevel) bool {
+	password := fl.Field().Interface().(string)
 
 	// Check if the password is at least 8 characters long
 	if utf8.RuneCountInString(password) < 8 {
@@ -24,22 +25,30 @@ func ValidatePassword(fl validator.FieldLevel) bool {
 	hasDigit := false
 	hasSymbol := false
 	hasUpper := false
+	hasLower := false
 	for _, char := range password {
-		if unicode.IsDigit(char) && (unicode.IsPunct(char) || unicode.IsSymbol(char)) && unicode.IsUpper(char) {
+		if unicode.IsNumber(char) {
 			hasDigit = true
+		}
+		if unicode.IsPunct(char) || unicode.IsSymbol(char) {
 			hasSymbol = true
+		}
+		if unicode.IsUpper(char) {
 			hasUpper = true
+		}
+		if unicode.IsLower(char) {
+			hasLower = true
 		}
 	}
 
-	fmt.Println("Validating password:", password)
+	//fmt.Println("Validating password:", password)
 
-	return hasDigit && hasSymbol && hasUpper
+	return hasDigit && hasSymbol && hasUpper && hasLower
 }
 
 // ImageURLValidation is a custom validator function to check if the URL points to an image.
-func ImageURLValidation(fl validator.FieldLevel) bool {
-	urlStr := fl.Field().String()
+var ImageURLValidation validator.Func = func(fl validator.FieldLevel) bool {
+	urlStr := fl.Field().Interface().(string)
 
 	// Parse the URL
 	u, err := url.Parse(urlStr)
@@ -56,17 +65,18 @@ func isImageURL(u *url.URL) bool {
 	if err != nil {
 		return false
 	}
-	fmt.Println(resp)
-	defer resp.Body.Close()
+	//defer resp.Body.Close()
 
 	// Check if the content type indicates an image
 	contentType := resp.Header.Get("Content-Type")
 
 	fmt.Println(contentType)
 
+	err = resp.Body.Close()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	return strings.HasPrefix(contentType, "image/")
 
 }
-
-// Register the custom validation function
-var V *validator.Validate
