@@ -49,7 +49,7 @@ func TestCreateShop(t *testing.T) {
 func TestGetShopById(t *testing.T) {
 	shop := createRandomShop(t)
 
-	getShop, err := testQueries.GetShopById(context.Background(), shop.ID)
+	getShop, err := testQueries.GetShopByname(context.Background(), shop.Name)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getShop)
 	assert.Equal(t, getShop.ID, shop.ID)
@@ -113,7 +113,7 @@ func TestDeleteShop(t *testing.T) {
 	err := testQueries.DeleteShop(context.Background(), shop.ID)
 	assert.NoError(t, err)
 
-	getShop, err := testQueries.GetShopById(context.Background(), shop.ID)
+	getShop, err := testQueries.GetShopByname(context.Background(), shop.Name)
 	assert.Error(t, err)
 	assert.Empty(t, getShop)
 
@@ -125,7 +125,7 @@ func TestDeleteAllShop(t *testing.T) {
 	err := testQueries.DeleteAllShops(context.Background())
 	assert.NoError(t, err)
 
-	getShop, err := testQueries.GetShopById(context.Background(), shop.ID)
+	getShop, err := testQueries.GetShopByname(context.Background(), shop.Name)
 	assert.Error(t, err)
 	assert.Empty(t, getShop)
 

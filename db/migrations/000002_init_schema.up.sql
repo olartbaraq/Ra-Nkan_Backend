@@ -29,6 +29,7 @@ CREATE TABLE "products" (
   "image" varchar NOT NULL,
   "qty_aval" int NOT NULL,
   "shop_id" bigint NOT NULL,
+  "shop_name" varchar NOT NULL,
   "category_id" bigint NOT NULL,
   "category_name" varchar NOT NULL,
   "sub_category_id" bigint NOT NULL,
@@ -114,6 +115,8 @@ CREATE INDEX ON "products" ("name");
 
 CREATE INDEX ON "products" ("shop_id");
 
+CREATE INDEX ON "products" ("shop_name");
+
 CREATE INDEX ON "category" ("name");
 
 CREATE INDEX ON "sub_category" ("name");
@@ -131,6 +134,8 @@ COMMENT ON COLUMN "orders"."user_id" IS 'to know which user has an order';
 -- COMMENT ON COLUMN "orders"."session_id" IS 'to track all orders';
 
 ALTER TABLE "products" ADD FOREIGN KEY ("shop_id") REFERENCES "shops" ("id");
+
+ALTER TABLE "products" ADD FOREIGN KEY ("shop_name") REFERENCES "shops" ("name");
 
 ALTER TABLE "products" ADD FOREIGN KEY ("category_id") REFERENCES "category" ("id");
 

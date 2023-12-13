@@ -58,6 +58,8 @@ func (s *Server) Start(port int) {
 	Auth{}.router(s)
 	Category{}.router(s)
 	SubCategory{}.router(s)
+	Shop{}.router(s)
+	Product{}.router(s)
 
 	s.router.Run(fmt.Sprintf(":%d", port))
 }

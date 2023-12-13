@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator"
+	"github.com/go-playground/validator/v10"
 	"github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -16,6 +16,16 @@ import (
 
 type Auth struct {
 	server *Server
+}
+
+type CreateUserParams struct {
+	Lastname  string `json:"lastname" binding:"required"`
+	Firstname string `json:"firstname" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone" binding:"required,len=11"`
+	Address   string `json:"address" binding:"required"`
+	Password  string `json:"password" binding:"required,min=8" validate:"passwordStrength"`
+	IsAdmin   bool   `json:"is_admin"`
 }
 
 type LoginUserParams struct {
@@ -32,30 +42,32 @@ func (a Auth) router(server *Server) {
 	serverGroup.POST("/login", a.login)
 }
 
-// Register the custom validation function
-func init() {
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("passwordStrength", ValidatePassword)
-	}
-}
-
 func (a *Auth) register(ctx *gin.Context) {
+
+	passwordStrengthResp := []string{
+		"Password must be minimum of 8 characters",
+		"Password must be contain at least a number",
+		"Password must be contain at least a symbol",
+		"Password must be contain a upper case letter",
+	}
+
+	V = validator.New()
+	V.RegisterValidation("passwordStrength", ValidatePassword)
+
 	user := CreateUserParams{}
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		stringErr := string(err.Error())
-		if strings.Contains(stringErr, "passwordStrength") {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error": `
-						"Password must be minimum of 8 characters",
-						"Password must be contain at least a number",
-						"Password must be contain at least a symbol",
-						"Password must be contain a upper case letter"
-						`,
-			})
-			return
+		fmt.Println(err.Error())
+		if err := V.Struct(user); err != nil {
+			stringErr := string(err.Error())
+			fmt.Println(stringErr)
+			if strings.Contains(stringErr, "passwordStrength") {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"Error": passwordStrengthResp,
+				})
+				return
+			}
 		}
-
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
 		})

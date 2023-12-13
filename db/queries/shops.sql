@@ -7,8 +7,8 @@ INSERT INTO shops (
 ) VALUES (
     $1, $2, $3, $4) RETURNING *;
 
--- name: GetShopById :one
-SELECT * FROM shops WHERE id = $1;
+-- name: GetShopByname :one
+SELECT * FROM shops WHERE name = $1;
 
 -- name: GetShopByEmail :one
 SELECT * FROM shops WHERE email = $1;

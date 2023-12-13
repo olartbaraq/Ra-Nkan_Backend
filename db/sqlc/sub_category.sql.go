@@ -58,11 +58,11 @@ func (q *Queries) DeleteSubCategory(ctx context.Context, id int64) error {
 }
 
 const getSubCategoryByCategory = `-- name: GetSubCategoryByCategory :many
-SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category WHERE category_id = $1 ORDER BY id
+SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category WHERE category_name = $1 ORDER BY id
 `
 
-func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryID int64) ([]SubCategory, error) {
-	rows, err := q.db.QueryContext(ctx, getSubCategoryByCategory, categoryID)
+func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryName string) ([]SubCategory, error) {
+	rows, err := q.db.QueryContext(ctx, getSubCategoryByCategory, categoryName)
 	if err != nil {
 		return nil, err
 	}

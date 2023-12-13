@@ -58,6 +58,7 @@ type Product struct {
 	Image           string    `json:"image"`
 	QtyAval         int32     `json:"qty_aval"`
 	ShopID          int64     `json:"shop_id"`
+	ShopName        string    `json:"shop_name"`
 	CategoryID      int64     `json:"category_id"`
 	CategoryName    string    `json:"category_name"`
 	SubCategoryID   int64     `json:"sub_category_id"`

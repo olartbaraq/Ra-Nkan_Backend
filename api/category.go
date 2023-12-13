@@ -21,6 +21,11 @@ type CreateCategoryParams struct {
 	Name string `json:"name" binding:"required"`
 }
 
+type UpdateCategoryParams struct {
+	ID   int64  `json:"id" binding:"required"`
+	Name string `json:"name" binding:"required"`
+}
+
 type CategoryResponse struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
@@ -35,6 +40,7 @@ func (c Category) router(server *Server) {
 	serverGroup.POST("/create_category", c.createCategory)
 	serverGroup.POST("/search_category", c.searchCategory)
 	serverGroup.GET("/list_categories", c.listCategories)
+	serverGroup.PUT("/update_category", c.updateCategory)
 }
 
 func (c *Category) createCategory(ctx *gin.Context) {
@@ -238,5 +244,67 @@ func (c *Category) listCategories(ctx *gin.Context) {
 		"status":  "success",
 		"message": "all categories fetched sucessfully",
 		"data":    allCategories,
+	})
+}
+
+func (c *Category) updateCategory(ctx *gin.Context) {
+
+	tokenString, err := extractTokenFromRequest(ctx)
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized: Missing or invalid token",
+		})
+		return
+	}
+
+	_, role, err := returnIdRole(tokenString)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":  err.Error(),
+			"status": "failed to verify token",
+		})
+		ctx.Abort()
+		return
+	}
+
+	if role != utils.AdminRole {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Unauthorized",
+		})
+		ctx.Abort()
+		return
+	}
+
+	category := UpdateCategoryParams{}
+
+	if err := ctx.ShouldBindJSON(&category); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	arg := db.UpdateCategoryParams{
+		ID:        category.ID,
+		Name:      category.Name,
+		UpdatedAt: time.Now(),
+	}
+
+	categoryToUpdate, err := c.server.queries.UpdateCategory(context.Background(), arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "category updated successfully",
+		"data":    categoryToUpdate,
 	})
 }

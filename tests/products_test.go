@@ -24,6 +24,7 @@ func createRandomProduct(t *testing.T) db.Product {
 		Image:           "https://imagesget.com",
 		QtyAval:         utils.RandomQty(),
 		ShopID:          shop.ID,
+		ShopName:        shop.Name,
 		CategoryID:      category.ID,
 		CategoryName:    category.Name,
 		SubCategoryID:   sub_category.ID,
@@ -53,6 +54,7 @@ func TestCreateProduct(t *testing.T) {
 		Image:           productTemplate.Image,
 		QtyAval:         productTemplate.QtyAval,
 		ShopID:          productTemplate.ShopID,
+		ShopName:        productTemplate.ShopName,
 		CategoryID:      productTemplate.CategoryID,
 		CategoryName:    productTemplate.CategoryName,
 		SubCategoryID:   productTemplate.SubCategoryID,
@@ -88,7 +90,7 @@ func TestGetProductByShop(t *testing.T) {
 
 	product := createRandomProduct(t)
 
-	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopID)
+	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
 	assert.Equal(t, len(getProducts), 1)

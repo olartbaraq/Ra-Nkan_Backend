@@ -87,7 +87,7 @@ func TestGetSubCategoryByName(t *testing.T) {
 func TestGetSubCategoryByCategory(t *testing.T) {
 	subCategory := createRandomSubCategory(t)
 
-	getSubCategory, err := testQueries.GetSubCategoryByCategory(context.Background(), subCategory.CategoryID)
+	getSubCategory, err := testQueries.GetSubCategoryByCategory(context.Background(), subCategory.CategoryName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getSubCategory)
 	assert.Equal(t, len(getSubCategory), 1)
