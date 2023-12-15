@@ -17,9 +17,9 @@ type Product struct {
 type CreateProductParams struct {
 	Name            string `json:"name" binding:"required"`
 	Description     string `json:"description" binding:"required"`
-	Price           string `json:"price" binding:"required,numeric"`
+	Price           string `json:"price" binding:"required,numeric,isPositive"`
 	Image           string `json:"image_url" binding:"required,url,isImageURL"`
-	QtyAval         int32  `json:"qty_aval" binding:"required"`
+	QtyAval         int32  `json:"qty_aval" binding:"required,numeric,gt=0"`
 	ShopID          int64  `json:"shop_id" binding:"required"`
 	ShopName        string `json:"shop_name" binding:"required"`
 	CategoryID      int64  `json:"category_id" binding:"required"`

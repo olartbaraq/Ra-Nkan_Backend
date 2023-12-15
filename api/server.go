@@ -55,6 +55,7 @@ func (s *Server) Start(port int) {
 
 		v.RegisterValidation("passwordStrength", ValidatePassword)
 		v.RegisterValidation("isImageURL", ImageURLValidation)
+		v.RegisterValidation("isPositive", PriceValidation)
 	}
 
 	s.router.GET("/", func(ctx *gin.Context) {

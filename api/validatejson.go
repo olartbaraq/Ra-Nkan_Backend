@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -86,4 +87,18 @@ func isImageURL(u *url.URL, ch chan bool) {
 
 	ch <- strings.HasPrefix(contentType, "image/")
 
+}
+
+var PriceValidation validator.Func = func(fl validator.FieldLevel) bool {
+	price := fl.Field().Interface().(string)
+
+	priceFloat, err := strconv.ParseFloat(price, 64)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if priceFloat < 0 {
+		return false
+	}
+	return true
 }
