@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -48,6 +47,10 @@ var ValidatePassword validator.Func = func(fl validator.FieldLevel) bool {
 
 // ImageURLValidation is a custom validator function to check if the URL points to an image.
 var ImageURLValidation validator.Func = func(fl validator.FieldLevel) bool {
+
+	imgCh := make(chan bool)
+	defer close(imgCh)
+
 	urlStr := fl.Field().Interface().(string)
 
 	// Parse the URL
@@ -56,27 +59,31 @@ var ImageURLValidation validator.Func = func(fl validator.FieldLevel) bool {
 		return false
 	}
 
-	return isImageURL(u)
+	go isImageURL(u, imgCh)
+
+	isImage := <-imgCh
+
+	return isImage
 }
 
-func isImageURL(u *url.URL) bool {
+func isImageURL(u *url.URL, ch chan bool) {
 
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return false
+		ch <- false
 	}
 	//defer resp.Body.Close()
 
 	// Check if the content type indicates an image
 	contentType := resp.Header.Get("Content-Type")
 
-	fmt.Println(contentType)
+	//fmt.Println(contentType)
 
 	err = resp.Body.Close()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	return strings.HasPrefix(contentType, "image/")
+	ch <- strings.HasPrefix(contentType, "image/")
 
 }
