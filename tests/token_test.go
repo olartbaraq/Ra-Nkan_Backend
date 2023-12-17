@@ -50,7 +50,7 @@ func TestVerifyToken(t *testing.T) {
 		return
 	}
 
-	claimToken, role, err := (returnJWT()).VerifyToken(token)
+	claimToken, role, err := (returnJWT()).VerifyToken(&token)
 	assert.NoError(t, err)
 	assert.Equal(t, role, "admin")
 	assert.NotEmpty(t, claimToken)

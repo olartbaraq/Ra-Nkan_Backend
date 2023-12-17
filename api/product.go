@@ -1,3 +1,8 @@
+/*
+ *   Copyright (c) 2023 Mubaraq Akanbi
+ *   All rights reserved.
+ *   Created by Mubaraq Akanbi
+ */
 package api
 
 import (

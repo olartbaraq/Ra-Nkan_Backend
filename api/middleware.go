@@ -29,7 +29,7 @@ func AuthenticatedMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userId, role, err := tokenManager.VerifyToken(tokenSplit[1])
+		userId, role, err := tokenManager.VerifyToken(&tokenSplit[1])
 
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

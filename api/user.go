@@ -79,7 +79,7 @@ func returnIdRole(tokenString string) (int64, string, error) {
 		return 0, "", errors.New("unauthorized: Missing or invalid token")
 	}
 
-	userId, role, err := tokenManager.VerifyToken(tokenString)
+	userId, role, err := tokenManager.VerifyToken(&tokenString)
 
 	if err != nil {
 		return 0, "", errors.New("failed to verify token")
