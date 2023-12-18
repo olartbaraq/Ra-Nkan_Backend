@@ -424,6 +424,50 @@ func (q *Queries) ListAllProducts(ctx context.Context, arg ListAllProductsParams
 	return items, nil
 }
 
+const listAllProductsByOrders = `-- name: ListAllProductsByOrders :many
+SELECT
+    p.id AS product_id,
+    p.name AS product_name,
+    COUNT(o.id) AS order_count
+FROM
+    products p
+LEFT JOIN
+    orders o ON p.id = o.product_id
+GROUP BY
+    p.id, p.name
+ORDER BY
+    order_count DESC
+`
+
+type ListAllProductsByOrdersRow struct {
+	ProductID   int64  `json:"product_id"`
+	ProductName string `json:"product_name"`
+	OrderCount  int64  `json:"order_count"`
+}
+
+func (q *Queries) ListAllProductsByOrders(ctx context.Context) ([]ListAllProductsByOrdersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllProductsByOrders)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAllProductsByOrdersRow{}
+	for rows.Next() {
+		var i ListAllProductsByOrdersRow
+		if err := rows.Scan(&i.ProductID, &i.ProductName, &i.OrderCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProduct = `-- name: UpdateProduct :one
 UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING id, name, description, price, image, qty_aval, shop_id, shop_name, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at
 `

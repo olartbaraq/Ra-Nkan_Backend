@@ -7,6 +7,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"strings"
 
@@ -33,12 +34,19 @@ type CreateProductParams struct {
 	SubCategoryName string `json:"subcategory_name" binding:"required"`
 }
 
+type GetProductIdParam struct {
+	ID int64 `form:"id"`
+}
+
 func (p Product) router(server *Server) {
 
 	p.server = server
 
-	serverGroup := server.router.Group("/products", AuthenticatedMiddleware())
-	serverGroup.POST("/create_product", p.createProduct)
+	serverGroup := server.router.Group("/products")
+	serverGroup.POST("/create_product", p.createProduct, AuthenticatedMiddleware())
+	serverGroup.GET("/get_products_orders", p.getProductOrders)
+	serverGroup.GET("/get_product_by_id", p.getProductById)
+
 	//serverGroup.POST("/login", a.login)
 }
 
@@ -123,5 +131,62 @@ func (p *Product) createProduct(ctx *gin.Context) {
 		"status":  "success",
 		"message": "product created successfully",
 		"data":    productToSave,
+	})
+}
+
+func (p *Product) getProductOrders(ctx *gin.Context) {
+
+	productByOrders, err := p.server.queries.ListAllProductsByOrders(context.Background())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "products retrieved successfully",
+		"data":    productByOrders,
+	})
+}
+
+func (p *Product) getProductById(ctx *gin.Context) {
+
+	product_id := GetProductIdParam{}
+
+	// if err := ctx.ShouldBindJSON(&product_id); err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, gin.H{
+	// 		"Error": err.Error(),
+	// 	})
+	// 	return
+	// }
+
+	if err := ctx.ShouldBindQuery(&product_id); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	productByID, err := p.server.queries.GetProductById(context.Background(), product_id.ID)
+	if err == sql.ErrNoRows {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"Error":   err.Error(),
+			"message": "Product not found",
+		})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":   err.Error(),
+			"message": "Issue Encountered, try again later",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "product retrieved successfully",
+		"data":    productByID,
 	})
 }
