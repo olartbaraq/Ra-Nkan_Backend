@@ -18,7 +18,7 @@ INSERT INTO products (
 SELECT * FROM products WHERE id = $1;
 
 -- name: GetProductByName :many
-SELECT * FROM products WHERE name = $1 ORDER BY id;
+SELECT * FROM products WHERE name LIKE '%' || $1 || '%' ORDER BY id;
 
 -- name: GetProductByShop :many
 SELECT * FROM products WHERE shop_name = $1 ORDER BY id;

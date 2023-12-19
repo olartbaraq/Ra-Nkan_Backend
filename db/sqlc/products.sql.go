@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -162,11 +163,11 @@ func (q *Queries) GetProductById(ctx context.Context, id int64) (Product, error)
 }
 
 const getProductByName = `-- name: GetProductByName :many
-SELECT id, name, description, price, image, qty_aval, shop_id, shop_name, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE name = $1 ORDER BY id
+SELECT id, name, description, price, image, qty_aval, shop_id, shop_name, category_id, category_name, sub_category_id, sub_category_name, created_at, updated_at FROM products WHERE name LIKE '%' || $1 || '%' ORDER BY id
 `
 
-func (q *Queries) GetProductByName(ctx context.Context, name string) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, getProductByName, name)
+func (q *Queries) GetProductByName(ctx context.Context, dollar_1 sql.NullString) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, getProductByName, dollar_1)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package all_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -81,7 +82,9 @@ func TestGetProductById(t *testing.T) {
 func TestGetProductByName(t *testing.T) {
 	product := createRandomProduct(t)
 
-	getProducts, err := testQueries.GetProductByName(context.Background(), product.Name)
+	nullString := sql.NullString{String: product.Name, Valid: true}
+
+	getProducts, err := testQueries.GetProductByName(context.Background(), nullString)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
 }

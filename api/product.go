@@ -34,8 +34,9 @@ type CreateProductParams struct {
 	SubCategoryName string `json:"subcategory_name" binding:"required"`
 }
 
-type GetProductIdParam struct {
-	ID int64 `form:"id"`
+type GetProductParams struct {
+	ID   int64  `form:"id"`
+	Name string `form:"name"`
 }
 
 func (p Product) router(server *Server) {
@@ -46,6 +47,7 @@ func (p Product) router(server *Server) {
 	serverGroup.POST("/create_product", p.createProduct, AuthenticatedMiddleware())
 	serverGroup.GET("/get_products_orders", p.getProductOrders)
 	serverGroup.GET("/get_product_by_id", p.getProductById)
+	serverGroup.GET("/get_products_by_name", p.getProductByName)
 
 	//serverGroup.POST("/login", a.login)
 }
@@ -153,23 +155,16 @@ func (p *Product) getProductOrders(ctx *gin.Context) {
 
 func (p *Product) getProductById(ctx *gin.Context) {
 
-	product_id := GetProductIdParam{}
+	product := GetProductParams{}
 
-	// if err := ctx.ShouldBindJSON(&product_id); err != nil {
-	// 	ctx.JSON(http.StatusBadRequest, gin.H{
-	// 		"Error": err.Error(),
-	// 	})
-	// 	return
-	// }
-
-	if err := ctx.ShouldBindQuery(&product_id); err != nil {
+	if err := ctx.ShouldBindQuery(&product); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
 		})
 		return
 	}
 
-	productByID, err := p.server.queries.GetProductById(context.Background(), product_id.ID)
+	productByID, err := p.server.queries.GetProductById(context.Background(), product.ID)
 	if err == sql.ErrNoRows {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"Error":   err.Error(),
@@ -188,5 +183,50 @@ func (p *Product) getProductById(ctx *gin.Context) {
 		"status":  "success",
 		"message": "product retrieved successfully",
 		"data":    productByID,
+	})
+}
+
+func (p *Product) getProductByName(ctx *gin.Context) {
+
+	product := GetProductParams{}
+
+	if err := ctx.ShouldBindQuery(&product); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	if strings.TrimSpace(product.Name) == "" {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "no input entered",
+		})
+		return
+	}
+
+	nullString := sql.NullString{String: product.Name, Valid: true}
+
+	productsByName, err := p.server.queries.GetProductByName(context.Background(), nullString)
+
+	if err == sql.ErrNoRows {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error":   err.Error(),
+			"message": "Issue Encountered, try again later",
+		})
+		ctx.Abort()
+		return
+	}
+
+	if len(productsByName) == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "Product not found",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "products retrieved successfully",
+		"data":    productsByName,
 	})
 }
