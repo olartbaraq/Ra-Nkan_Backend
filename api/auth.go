@@ -44,10 +44,10 @@ func (a *Auth) register(ctx *gin.Context) {
 
 	passwordStrengthResp := []string{
 		"Password must be minimum of 8 characters",
-		"Password must be contain at least a number",
-		"Password must be contain at least a symbol",
-		"Password must be contain an upper case letter",
-		"Password must be contain a lower case letter",
+		"Password must contain at least a number",
+		"Password must contain at least a symbol",
+		"Password must contain an upper case letter",
+		"Password must contain a lower case letter",
 	}
 
 	user := CreateUserParams{}
@@ -58,7 +58,9 @@ func (a *Auth) register(ctx *gin.Context) {
 		//fmt.Println(stringErr)
 		if strings.Contains(stringErr, "passwordStrength") {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error": passwordStrengthResp,
+				"status":  http.StatusBadRequest,
+				"message": "password Strength not met",
+				"Error":   passwordStrengthResp,
 			})
 			return
 		}
@@ -106,9 +108,10 @@ func (a *Auth) register(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"message": "user created successfully",
-		"data":    userResponse,
+		"statusCode": http.StatusCreated,
+		"status":     "success",
+		"message":    "user created successfully",
+		"data":       userResponse,
 	})
 }
 
@@ -161,8 +164,9 @@ func (a Auth) login(ctx *gin.Context) {
 
 	if err == sql.ErrNoRows {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"Error":   err.Error(),
-			"message": "The requested user with the specified email does not exist.",
+			"statusCode": http.StatusNotFound,
+			"Error":      err.Error(),
+			"message":    "The requested user with the specified email does not exist.",
 		})
 		return
 	} else if err != nil {
@@ -203,9 +207,10 @@ func (a Auth) login(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "login successful",
-		"token":   token,
-		"data":    userResponse,
+		"statusCode": http.StatusOK,
+		"status":     "success",
+		"message":    "login successful",
+		"token":      token,
+		"data":       userResponse,
 	})
 }
