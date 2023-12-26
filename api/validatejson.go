@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -54,44 +56,74 @@ var ValidatePassword validator.Func = func(fl validator.FieldLevel) bool {
 // ImageURLValidation is a custom validator function to check if the URL points to an image.
 var ImageURLValidation validator.Func = func(fl validator.FieldLevel) bool {
 
-	imgCh := make(chan bool)
-	defer close(imgCh)
+	urlStrArray := fl.Field().Interface().([]string)
 
-	urlStr := fl.Field().Interface().(string)
+	// Create a channel to receive results from goroutines
+	imgCh := make(chan bool, len(urlStrArray))
+	//defer close(imgCh)
 
-	// Parse the URL
-	u, err := url.Parse(urlStr)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
+	// Use a WaitGroup to wait for all goroutines to finish
+	var wg sync.WaitGroup
+
+	for _, urlStr := range urlStrArray {
+		wg.Add(1)
+		go isImageURL(urlStr, imgCh, &wg)
 	}
 
-	go isImageURL(u, imgCh)
+	// Close the channel when all goroutines finish
+	go func() {
+		wg.Wait()
+		close(imgCh)
+	}()
 
-	isImage := <-imgCh
+	// Check the results from the channel
+	for isImage := range imgCh {
+		if !isImage {
+			return false
+		}
+	}
 
-	return isImage
+	return true
 }
 
-func isImageURL(u *url.URL, ch chan bool) {
+func isImageURL(urlStr string, ch chan<- bool, wg *sync.WaitGroup) {
 
-	resp, err := http.Get(u.String())
-	if err != nil {
+	defer wg.Done()
+
+	u, err := url.Parse(urlStr)
+	if err != nil || u.Scheme == "" || u.Host == "" {
 		ch <- false
+		return
 	}
-	//defer resp.Body.Close()
+
+	client := http.Client{
+		Timeout: 5 * time.Second, // Set a timeout for the HTTP request
+	}
+
+	resp, err := client.Get(u.String())
+	if err != nil {
+		// Handle different types of errors (e.g., network error, timeout)
+		// Later
+		ch <- false
+		return
+	}
+	defer resp.Body.Close()
 
 	// Check if the content type indicates an image
 	contentType := resp.Header.Get("Content-Type")
+	isImage := strings.HasPrefix(contentType, "image/")
 
-	//fmt.Println(contentType)
-
-	err = resp.Body.Close()
-	if err != nil {
-		log.Fatal(err.Error())
+	// Check if the image is not more than 500KB
+	isNotMoreThan500Kb := false
+	contentLength := resp.Header.Get("Content-Length")
+	if len(contentLength) > 0 {
+		length, err := strconv.ParseInt(contentLength, 10, 64)
+		if err == nil && length <= 500*1024 { // 500 KB in bytes
+			isNotMoreThan500Kb = true
+		}
 	}
 
-	ch <- strings.HasPrefix(contentType, "image/")
-
+	ch <- isImage && isNotMoreThan500Kb
 }
 
 var PriceValidation validator.Func = func(fl validator.FieldLevel) bool {

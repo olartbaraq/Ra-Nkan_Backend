@@ -3,10 +3,15 @@ package utils
 import "github.com/spf13/viper"
 
 type Config struct {
-	DBdriver     string `mapstructure:"DB_DRIVER"`
-	DBsource     string `mapstructure:"DB_SOURCE"`
-	DBsourceLive string `mapstructure:"DB_SOURCE_LIVE"`
-	SigningKey   string `mapstructure:"SIGNING_KEY"`
+	DBdriver            string `mapstructure:"DB_DRIVER"`
+	DBsource            string `mapstructure:"DB_SOURCE"`
+	DBsourceLive        string `mapstructure:"DB_SOURCE_LIVE"`
+	SigningKey          string `mapstructure:"SIGNING_KEY"`
+	CloudName           string `mapstructure:"CLOUD_NAME"`
+	CloudinaryApiKey    string `mapstructure:"CLOUDINARY_API_KEY"`
+	CloudinaryApiSecret string `mapstructure:"CLOUDINARY_API_SECRET"`
+	CloudinaryUrl       string `mapstructure:"CLOUDINARY_URL"`
+	CloudinaryFolder    string `mapstructure:"CLOUDINARY_UPLOAD_FOLDER"`
 }
 
 func LoadDBConfig(path string) (config *Config, err error) {

@@ -26,7 +26,7 @@ CREATE TABLE "products" (
   "name" varchar NOT NULL,
   "description" text NOT NULL,
   "price" numeric(10,2) NOT NULL,
-  "image" varchar NOT NULL,
+  "images" varchar[] NOT NULL,
   "qty_aval" int NOT NULL,
   "shop_id" bigint NOT NULL,
   "shop_name" varchar NOT NULL,

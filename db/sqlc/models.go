@@ -55,7 +55,7 @@ type Product struct {
 	// description of the item
 	Description     string    `json:"description"`
 	Price           string    `json:"price"`
-	Image           string    `json:"image"`
+	Images          []string  `json:"images"`
 	QtyAval         int32     `json:"qty_aval"`
 	ShopID          int64     `json:"shop_id"`
 	ShopName        string    `json:"shop_name"`

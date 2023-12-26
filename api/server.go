@@ -40,6 +40,8 @@ func NewServer(envPath string) *Server {
 
 	g := gin.Default()
 
+	g.MaxMultipartMemory = 8 << 20
+
 	g.Use(cors.Default())
 	return &Server{
 		queries: q,
@@ -51,11 +53,12 @@ func NewServer(envPath string) *Server {
 
 func (s *Server) Start(port int) {
 
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+	if V, ok := binding.Validator.Engine().(*validator.Validate); ok {
 
-		v.RegisterValidation("passwordStrength", ValidatePassword)
-		v.RegisterValidation("isImageURL", ImageURLValidation)
-		v.RegisterValidation("isPositive", PriceValidation)
+		V.RegisterValidation("passwordStrength", ValidatePassword)
+		V.RegisterValidation("isImageURL", ImageURLValidation)
+		V.RegisterValidation("isPositive", PriceValidation)
+
 	}
 
 	s.router.GET("/", func(ctx *gin.Context) {

@@ -3,7 +3,7 @@ INSERT INTO products (
     name,
     description,
     price,
-    image,
+    images,
     qty_aval,
     shop_id,
     shop_name,
@@ -54,7 +54,7 @@ ORDER BY
 
 
 -- name: UpdateProduct :one
-UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, image = $3, updated_at = $7 WHERE id = $1 RETURNING *;
+UPDATE products SET name = $2, qty_aval = $6, description = $5, price = $4, images = $3, updated_at = $7 WHERE id = $1 RETURNING *;
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;

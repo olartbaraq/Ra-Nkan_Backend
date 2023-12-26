@@ -18,11 +18,16 @@ func createRandomProduct(t *testing.T) db.Product {
 	category := createRandomCategory(t)
 	sub_category := createRandomSubCategory(t)
 
+	images := []string{
+		"https://images.com",
+		"https://images.org",
+	}
+
 	arg := db.CreateProductParams{
 		Name:            utils.RandomName(),
 		Description:     utils.RandomText(),
 		Price:           utils.RandomPrice(),
-		Image:           "https://imagesget.com",
+		Images:          images,
 		QtyAval:         utils.RandomQty(),
 		ShopID:          shop.ID,
 		ShopName:        shop.Name,
@@ -52,7 +57,7 @@ func TestCreateProduct(t *testing.T) {
 		Name:            productTemplate.Name,
 		Price:           productTemplate.Price,
 		Description:     productTemplate.Description,
-		Image:           productTemplate.Image,
+		Images:          productTemplate.Images,
 		QtyAval:         productTemplate.QtyAval,
 		ShopID:          productTemplate.ShopID,
 		ShopName:        productTemplate.ShopName,
@@ -168,7 +173,7 @@ func TestUpdateProduct(t *testing.T) {
 	arg := db.UpdateProductParams{
 		ID:          product.ID,
 		Name:        utils.RandomName(),
-		Image:       utils.RandomEmail(),
+		Images:      product.Images,
 		Price:       utils.RandomPrice(),
 		Description: utils.RandomText(),
 		QtyAval:     utils.RandomQty(),
@@ -179,7 +184,7 @@ func TestUpdateProduct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, product)
 	assert.Equal(t, updatedProduct.Name, arg.Name)
-	assert.Equal(t, updatedProduct.Image, arg.Image)
+	assert.Equal(t, updatedProduct.Images, arg.Images)
 	assert.Equal(t, updatedProduct.Price, arg.Price)
 	assert.Equal(t, updatedProduct.Description, arg.Description)
 	assert.Equal(t, updatedProduct.QtyAval, arg.QtyAval)
