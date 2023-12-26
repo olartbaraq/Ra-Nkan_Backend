@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
-	"github.com/olartbaraq/spectrumshelf/utils"
+	config "github.com/olartbaraq/spectrumshelf/configs"
 )
 
 // type CloudinaryValues struct {
@@ -19,23 +19,21 @@ import (
 // 	}
 // }
 
-var config *utils.Config
-
 func ImageUploadHelper(filename interface{}) (string, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	//create cloudinary instance
-	cldInstance, err := cloudinary.NewFromParams(config.CloudName, config.CloudinaryApiKey, config.CloudinaryApiSecret)
-	//log.Println("are we here?", config.CloudName, config.CloudinaryApiKey, config.CloudinaryApiSecret)
+	cldInstance, err := cloudinary.NewFromParams(config.EnvCloudName(), config.EnvCloudAPIKey(), config.EnvCloudAPISecret())
+	//log.Println("are we here?", config.EnvCloudName(), config.EnvCloudAPIKey(), config.EnvCloudAPISecret())
 	if err != nil {
-		println("Error creating cloudinary instance", err)
+		//println("Error creating cloudinary instance", err)
 		return "", err
 	}
 
 	//upload file
-	uploadParam, err := cldInstance.Upload.Upload(ctx, filename, uploader.UploadParams{Folder: config.CloudinaryFolder})
+	uploadParam, err := cldInstance.Upload.Upload(ctx, filename, uploader.UploadParams{Folder: config.EnvCloudUploadFolder()})
 	if err != nil {
 		return "", err
 	}

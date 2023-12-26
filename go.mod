@@ -3,8 +3,11 @@ module github.com/olartbaraq/spectrumshelf
 go 1.21.4
 
 require (
+	github.com/cloudinary/cloudinary-go v1.7.0
+	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
@@ -12,15 +15,9 @@ require (
 )
 
 require (
-	github.com/cloudinary/cloudinary-go v1.7.0 // indirect
 	github.com/creasty/defaults v1.5.1 // indirect
-	github.com/gin-contrib/cors v1.5.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
-	github.com/markbates/goth v1.78.0 // indirect
-	golang.org/x/oauth2 v0.12.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 )
 
 require (
@@ -33,9 +30,8 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect

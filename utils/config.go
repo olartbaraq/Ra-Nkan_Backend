@@ -33,22 +33,23 @@ func LoadDBConfig(path string) (config *Config, err error) {
 
 	return config, nil
 }
-func LoadOtherConfig(path string) (config *Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
 
-	viper.AutomaticEnv()
+// func LoadOtherConfig(path string) (config2 *Config, err error) {
+// 	viper.AddConfigPath(path)
+// 	viper.SetConfigName("app")
+// 	viper.SetConfigType("env")
 
-	err = viper.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
+// 	viper.AutomaticEnv()
 
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		return nil, err
-	}
+// 	err = viper.ReadInConfig()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return config, nil
-}
+// 	err = viper.Unmarshal(&config2)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return config2, nil
+// }

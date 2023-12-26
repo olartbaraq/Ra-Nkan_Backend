@@ -152,7 +152,7 @@ func (p *Product) createProductByFile(ctx *gin.Context) {
 
 			uploadUrl, err := NewMediaUpload().FileUpload(File{File: fileContent})
 			// log.Println("INSIDE FILE UPLOAD GOROUTINE FILE\n", uploadUrl)
-			// log.Println("INSIDE FILE UPLOAD GOROUTINE ERR", err)
+			//log.Println("INSIDE FILE UPLOAD GOROUTINE ERR", err)
 			results <- UploadResult{Url: uploadUrl, Err: err}
 		}(file, uploadResults)
 	}
@@ -297,6 +297,8 @@ func (p *Product) createProductByUrl(ctx *gin.Context) {
 			}
 
 			uploadUrl, err := NewMediaUpload().RemoteUpload(*parsedUrl)
+			// log.Println("INSIDE FILE UPLOAD GOROUTINE FILE\n", uploadUrl)
+			//log.Println("INSIDE FILE UPLOAD GOROUTINE ERR", err)
 			results <- UploadResult{Url: uploadUrl, Err: err}
 		}(imageUrl, uploadResults)
 	}
