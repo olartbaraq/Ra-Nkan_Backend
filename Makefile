@@ -44,6 +44,20 @@ sqlc:
 	#generate the sql queries to golang
 	sqlc generate
 
+build_image:
+	#build project file to a docker image
+	docker build -t ra_nkan:latest .
+
+run_image:
+	#docker command to run the project docker image
+	docker rm ra_nkan
+	docker run --name ra_nkan --network ra_nkan_network -p 8000:8000 -e DB_SOURCE_LIVE="postgres://root:testing@172.20.0.1:5433/ra_nkan_db?sslmode=disable" ra_nkan:latest
+
+run_image_prod:
+	#docker command to run the project docker image
+	docker rm ra_nkan
+	docker run --name ra_nkan --network ra_nkan_network -p 8000:8000 -e GIN_MODE=release -e DB_SOURCE_LIVE="postgres://root:testing@172.20.0.1:5433/ra_nkan_db?sslmode=disable" ra_nkan:latest
+
 test:
 	#run all tests in test directory
 	go test -v -cover ./...
