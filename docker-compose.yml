@@ -16,5 +16,20 @@ services:
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=testing
+      - POSTGRES_DB=ra_nkan_db
     ports:
       - 5433:5432
+  
+  api:
+    container_name: ra_nkan_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - DB_SOURCE_LIVE=postgres://root:testing@172.25.0.1:5433/ra_nkan_db?sslmode=disable
+    depends_on:
+      - postgres-live
+    entrypoint: ["/app/wait-for.sh", "172.25.0.1:5433", "--", "/app/start.sh"]
+    command: ["/app/main"]
