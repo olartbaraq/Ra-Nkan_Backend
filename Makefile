@@ -3,11 +3,11 @@ c_m:
 	migrate create -ext sql -dir db/migrations -seq $(name)
 
 p_up:
-	#create postgres server with docker
+	#create all services listed in docker compose file with docker
 	docker compose up -d
 
 p_down:
-	#delete postgres server
+	#delete all services listed in docker compose file
 	docker compose down
 
 db_up:
@@ -19,6 +19,17 @@ db_down:
 	#delete a database from the db server
 	docker exec -it spectrumshelf_postgres dropdb --username=root spectrumshelf_db
 	docker exec -it ra_nkan_live dropdb --username=root ra_nkan_db
+
+dock_start:
+	#start the docker processes
+	docker start spectrumshelf_postgres
+	docker start ra_nkan_live
+
+dock_stop:
+	#stop the docker processes
+	docker stop spectrumshelf_postgres
+	docker stop ra_nkan_live
+	docker stop ra_nkan_api
 
 m_up:
 	#run a migration to the database
@@ -33,6 +44,20 @@ m_down:
 sqlc:
 	#generate the sql queries to golang
 	sqlc generate
+
+build_image:
+	#build project file to a docker image
+	docker build -t ra_nkan:latest .
+
+# run_image:
+# 	#docker command to run the project docker image
+# 	docker rm ra_nkan
+# 	docker run --name ra_nkan_api --network ra_nkan_network -p 8000:8000 -e DB_SOURCE_LIVE="postgres://root:testing@172.20.0.1:5433/ra_nkan_db?sslmode=disable" ra_nkan:latest
+
+# run_image_prod:
+# 	#docker command to run the project docker image
+# 	docker rm ra_nkan
+# 	docker run --name ra_nkan --network ra_nkan_network -p 8000:8000 -e GIN_MODE=release -e DB_SOURCE_LIVE="postgres://root:testing@172.20.0.1:5433/ra_nkan_db?sslmode=disable" ra_nkan:latest
 
 test:
 	#run all tests in test directory

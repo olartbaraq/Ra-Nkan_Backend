@@ -23,6 +23,7 @@ func createRandomCategory(t *testing.T) db.Category {
 
 	return category
 }
+
 func TestCreateCategory(t *testing.T) {
 	categoryPlate := createRandomCategory(t)
 

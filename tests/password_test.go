@@ -1,3 +1,9 @@
+/*
+ *   Copyright (c) 2023 Mubaraq Akanbi
+ *   All rights reserved.
+ *   Created by Mubaraq Akanbi
+ */
+
 package all_test
 
 import (

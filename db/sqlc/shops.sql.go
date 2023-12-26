@@ -84,12 +84,12 @@ func (q *Queries) GetShopByEmail(ctx context.Context, email string) (Shop, error
 	return i, err
 }
 
-const getShopById = `-- name: GetShopById :one
-SELECT id, name, phone, address, email, created_at, updated_at FROM shops WHERE id = $1
+const getShopByname = `-- name: GetShopByname :one
+SELECT id, name, phone, address, email, created_at, updated_at FROM shops WHERE name = $1
 `
 
-func (q *Queries) GetShopById(ctx context.Context, id int64) (Shop, error) {
-	row := q.db.QueryRowContext(ctx, getShopById, id)
+func (q *Queries) GetShopByname(ctx context.Context, name string) (Shop, error) {
+	row := q.db.QueryRowContext(ctx, getShopByname, name)
 	var i Shop
 	err := row.Scan(
 		&i.ID,

@@ -54,8 +54,8 @@ func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
 	return string(tokenString), nil
 }
 
-func (j *JWTToken) VerifyToken(tokenString string) (int64, string, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwtCustomClaim{}, func(t *jwt.Token) (interface{}, error) {
+func (j *JWTToken) VerifyToken(tokenString *string) (int64, string, error) {
+	token, err := jwt.ParseWithClaims(*tokenString, &jwtCustomClaim{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid authentication token")
 		}

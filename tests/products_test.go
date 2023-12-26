@@ -2,6 +2,7 @@ package all_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -17,15 +18,23 @@ func createRandomProduct(t *testing.T) db.Product {
 	category := createRandomCategory(t)
 	sub_category := createRandomSubCategory(t)
 
+	images := []string{
+		"https://images.com",
+		"https://images.org",
+	}
+
 	arg := db.CreateProductParams{
-		Name:          utils.RandomName(),
-		Description:   utils.RandomText(),
-		Price:         utils.RandomPrice(),
-		Image:         "https://imagesget.com",
-		QtyAval:       utils.RandomQty(),
-		ShopID:        shop.ID,
-		CategoryID:    category.ID,
-		SubCategoryID: sub_category.ID,
+		Name:            utils.RandomName(),
+		Description:     utils.RandomText(),
+		Price:           utils.RandomPrice(),
+		Images:          images,
+		QtyAval:         utils.RandomQty(),
+		ShopID:          shop.ID,
+		ShopName:        shop.Name,
+		CategoryID:      category.ID,
+		CategoryName:    category.Name,
+		SubCategoryID:   sub_category.ID,
+		SubCategoryName: sub_category.Name,
 	}
 
 	product, err := testQueries.CreateProduct(context.Background(), arg)
@@ -45,14 +54,17 @@ func TestCreateProduct(t *testing.T) {
 	productTemplate := createRandomProduct(t)
 
 	product, err := testQueries.CreateProduct(context.Background(), db.CreateProductParams{
-		Name:          productTemplate.Name,
-		Price:         productTemplate.Price,
-		Description:   productTemplate.Description,
-		Image:         productTemplate.Image,
-		QtyAval:       productTemplate.QtyAval,
-		ShopID:        productTemplate.ShopID,
-		CategoryID:    productTemplate.CategoryID,
-		SubCategoryID: productTemplate.SubCategoryID,
+		Name:            productTemplate.Name,
+		Price:           productTemplate.Price,
+		Description:     productTemplate.Description,
+		Images:          productTemplate.Images,
+		QtyAval:         productTemplate.QtyAval,
+		ShopID:          productTemplate.ShopID,
+		ShopName:        productTemplate.ShopName,
+		CategoryID:      productTemplate.CategoryID,
+		CategoryName:    productTemplate.CategoryName,
+		SubCategoryID:   productTemplate.SubCategoryID,
+		SubCategoryName: productTemplate.SubCategoryName,
 	})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, product)
@@ -75,7 +87,9 @@ func TestGetProductById(t *testing.T) {
 func TestGetProductByName(t *testing.T) {
 	product := createRandomProduct(t)
 
-	getProducts, err := testQueries.GetProductByName(context.Background(), product.Name)
+	nullString := sql.NullString{String: product.Name, Valid: true}
+
+	getProducts, err := testQueries.GetProductByName(context.Background(), nullString)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
 }
@@ -84,7 +98,7 @@ func TestGetProductByShop(t *testing.T) {
 
 	product := createRandomProduct(t)
 
-	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopID)
+	getProducts, err := testQueries.GetProductByShop(context.Background(), product.ShopName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getProducts)
 	assert.Equal(t, len(getProducts), 1)
@@ -159,7 +173,7 @@ func TestUpdateProduct(t *testing.T) {
 	arg := db.UpdateProductParams{
 		ID:          product.ID,
 		Name:        utils.RandomName(),
-		Image:       utils.RandomEmail(),
+		Images:      product.Images,
 		Price:       utils.RandomPrice(),
 		Description: utils.RandomText(),
 		QtyAval:     utils.RandomQty(),
@@ -170,7 +184,7 @@ func TestUpdateProduct(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, product)
 	assert.Equal(t, updatedProduct.Name, arg.Name)
-	assert.Equal(t, updatedProduct.Image, arg.Image)
+	assert.Equal(t, updatedProduct.Images, arg.Images)
 	assert.Equal(t, updatedProduct.Price, arg.Price)
 	assert.Equal(t, updatedProduct.Description, arg.Description)
 	assert.Equal(t, updatedProduct.QtyAval, arg.QtyAval)

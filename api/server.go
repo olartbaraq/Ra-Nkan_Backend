@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -37,6 +40,9 @@ func NewServer(envPath string) *Server {
 
 	g := gin.Default()
 
+	g.MaxMultipartMemory = 8 << 20
+
+	g.Use(cors.Default())
 	return &Server{
 		queries: q,
 		router:  g,
@@ -46,6 +52,15 @@ func NewServer(envPath string) *Server {
 }
 
 func (s *Server) Start(port int) {
+
+	if V, ok := binding.Validator.Engine().(*validator.Validate); ok {
+
+		V.RegisterValidation("passwordStrength", ValidatePassword)
+		V.RegisterValidation("isImageURL", ImageURLValidation)
+		V.RegisterValidation("isPositive", PriceValidation)
+
+	}
+
 	s.router.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"Home": "Welcome to Ra'Nkan Homepage...",
@@ -55,6 +70,9 @@ func (s *Server) Start(port int) {
 	User{}.router(s)
 	Auth{}.router(s)
 	Category{}.router(s)
+	SubCategory{}.router(s)
+	Shop{}.router(s)
+	Product{}.router(s)
 
 	s.router.Run(fmt.Sprintf(":%d", port))
 }

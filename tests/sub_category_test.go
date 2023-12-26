@@ -17,8 +17,9 @@ func createRandomSubCategory(t *testing.T) db.SubCategory {
 	category := createRandomCategory(t)
 
 	arg := db.CreateSubCategoryParams{
-		Name:       utils.RandomName(),
-		CategoryID: category.ID,
+		Name:         utils.RandomName(),
+		CategoryID:   category.ID,
+		CategoryName: category.Name,
 	}
 
 	subCategory, err := testQueries.CreateSubCategory(context.Background(), arg)
@@ -35,8 +36,9 @@ func TestCreateSubCategory(t *testing.T) {
 	subCategoryPlate := createRandomSubCategory(t)
 
 	arg := db.CreateSubCategoryParams{
-		Name:       subCategoryPlate.Name,
-		CategoryID: subCategoryPlate.CategoryID,
+		Name:         subCategoryPlate.Name,
+		CategoryID:   subCategoryPlate.CategoryID,
+		CategoryName: subCategoryPlate.Name,
 	}
 
 	subCategory, err := testQueries.CreateSubCategory(context.Background(), arg)
@@ -85,7 +87,7 @@ func TestGetSubCategoryByName(t *testing.T) {
 func TestGetSubCategoryByCategory(t *testing.T) {
 	subCategory := createRandomSubCategory(t)
 
-	getSubCategory, err := testQueries.GetSubCategoryByCategory(context.Background(), subCategory.CategoryID)
+	getSubCategory, err := testQueries.GetSubCategoryByCategory(context.Background(), subCategory.CategoryName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, getSubCategory)
 	assert.Equal(t, len(getSubCategory), 1)

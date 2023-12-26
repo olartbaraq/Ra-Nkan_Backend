@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator"
 	"github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -16,6 +14,16 @@ import (
 
 type Auth struct {
 	server *Server
+}
+
+type CreateUserParams struct {
+	Lastname  string `json:"lastname" binding:"required"`
+	Firstname string `json:"firstname" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone" binding:"required,len=11"`
+	Address   string `json:"address" binding:"required"`
+	Password  string `json:"password" binding:"required,passwordStrength"`
+	IsAdmin   bool   `json:"is_admin"`
 }
 
 type LoginUserParams struct {
@@ -32,30 +40,30 @@ func (a Auth) router(server *Server) {
 	serverGroup.POST("/login", a.login)
 }
 
-// Register the custom validation function
-func init() {
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("passwordStrength", ValidatePassword)
-	}
-}
-
 func (a *Auth) register(ctx *gin.Context) {
+
+	passwordStrengthResp := []string{
+		"Password must be minimum of 8 characters",
+		"Password must contain at least a number",
+		"Password must contain at least a symbol",
+		"Password must contain an upper case letter",
+		"Password must contain a lower case letter",
+	}
+
 	user := CreateUserParams{}
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
+		//fmt.Println(err.Error())
 		stringErr := string(err.Error())
+		//fmt.Println(stringErr)
 		if strings.Contains(stringErr, "passwordStrength") {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"Error": `
-						"Password must be minimum of 8 characters",
-						"Password must be contain at least a number",
-						"Password must be contain at least a symbol",
-						"Password must be contain a upper case letter"
-						`,
+				"status":  http.StatusBadRequest,
+				"message": "password Strength not met",
+				"Error":   passwordStrengthResp,
 			})
 			return
 		}
-
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
 		})
@@ -100,9 +108,10 @@ func (a *Auth) register(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"message": "user created successfully",
-		"data":    userResponse,
+		"statusCode": http.StatusCreated,
+		"status":     "success",
+		"message":    "user created successfully",
+		"data":       userResponse,
 	})
 }
 
@@ -155,8 +164,9 @@ func (a Auth) login(ctx *gin.Context) {
 
 	if err == sql.ErrNoRows {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"Error":   err.Error(),
-			"message": "The requested user with the specified email does not exist.",
+			"statusCode": http.StatusNotFound,
+			"Error":      err.Error(),
+			"message":    "The requested user with the specified email does not exist.",
 		})
 		return
 	} else if err != nil {
@@ -197,9 +207,10 @@ func (a Auth) login(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "login successful",
-		"token":   token,
-		"data":    userResponse,
+		"statusCode": http.StatusOK,
+		"status":     "success",
+		"message":    "login successful",
+		"token":      token,
+		"data":       userResponse,
 	})
 }

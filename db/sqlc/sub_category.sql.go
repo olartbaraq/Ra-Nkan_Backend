@@ -13,23 +13,26 @@ import (
 const createSubCategory = `-- name: CreateSubCategory :one
 INSERT INTO sub_category (
     name,
-    category_id
+    category_id,
+    category_name
 ) VALUES (
-    $1, $2) RETURNING id, name, category_id, created_at, updated_at
+    $1, $2, $3) RETURNING id, name, category_id, category_name, created_at, updated_at
 `
 
 type CreateSubCategoryParams struct {
-	Name       string `json:"name"`
-	CategoryID int64  `json:"category_id"`
+	Name         string `json:"name"`
+	CategoryID   int64  `json:"category_id"`
+	CategoryName string `json:"category_name"`
 }
 
 func (q *Queries) CreateSubCategory(ctx context.Context, arg CreateSubCategoryParams) (SubCategory, error) {
-	row := q.db.QueryRowContext(ctx, createSubCategory, arg.Name, arg.CategoryID)
+	row := q.db.QueryRowContext(ctx, createSubCategory, arg.Name, arg.CategoryID, arg.CategoryName)
 	var i SubCategory
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -55,11 +58,11 @@ func (q *Queries) DeleteSubCategory(ctx context.Context, id int64) error {
 }
 
 const getSubCategoryByCategory = `-- name: GetSubCategoryByCategory :many
-SELECT id, name, category_id, created_at, updated_at FROM sub_category WHERE category_id = $1 ORDER BY id
+SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category WHERE category_name = $1 ORDER BY id
 `
 
-func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryID int64) ([]SubCategory, error) {
-	rows, err := q.db.QueryContext(ctx, getSubCategoryByCategory, categoryID)
+func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryName string) ([]SubCategory, error) {
+	rows, err := q.db.QueryContext(ctx, getSubCategoryByCategory, categoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +74,7 @@ func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryID int64
 			&i.ID,
 			&i.Name,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -88,7 +92,7 @@ func (q *Queries) GetSubCategoryByCategory(ctx context.Context, categoryID int64
 }
 
 const getSubCategoryById = `-- name: GetSubCategoryById :one
-SELECT id, name, category_id, created_at, updated_at FROM sub_category WHERE id = $1
+SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category WHERE id = $1
 `
 
 func (q *Queries) GetSubCategoryById(ctx context.Context, id int64) (SubCategory, error) {
@@ -98,6 +102,7 @@ func (q *Queries) GetSubCategoryById(ctx context.Context, id int64) (SubCategory
 		&i.ID,
 		&i.Name,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -105,7 +110,7 @@ func (q *Queries) GetSubCategoryById(ctx context.Context, id int64) (SubCategory
 }
 
 const getSubCategoryByName = `-- name: GetSubCategoryByName :one
-SELECT id, name, category_id, created_at, updated_at FROM sub_category WHERE name = $1
+SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category WHERE name = $1
 `
 
 func (q *Queries) GetSubCategoryByName(ctx context.Context, name string) (SubCategory, error) {
@@ -115,6 +120,7 @@ func (q *Queries) GetSubCategoryByName(ctx context.Context, name string) (SubCat
 		&i.ID,
 		&i.Name,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -122,7 +128,7 @@ func (q *Queries) GetSubCategoryByName(ctx context.Context, name string) (SubCat
 }
 
 const listAllSubCategory = `-- name: ListAllSubCategory :many
-SELECT id, name, category_id, created_at, updated_at FROM sub_category ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, name, category_id, category_name, created_at, updated_at FROM sub_category ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListAllSubCategoryParams struct {
@@ -143,6 +149,7 @@ func (q *Queries) ListAllSubCategory(ctx context.Context, arg ListAllSubCategory
 			&i.ID,
 			&i.Name,
 			&i.CategoryID,
+			&i.CategoryName,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -160,7 +167,7 @@ func (q *Queries) ListAllSubCategory(ctx context.Context, arg ListAllSubCategory
 }
 
 const updateSubCategory = `-- name: UpdateSubCategory :one
-UPDATE sub_category SET name = $2, updated_at = $3 WHERE id = $1 RETURNING id, name, category_id, created_at, updated_at
+UPDATE sub_category SET name = $2, updated_at = $3 WHERE id = $1 RETURNING id, name, category_id, category_name, created_at, updated_at
 `
 
 type UpdateSubCategoryParams struct {
@@ -176,6 +183,7 @@ func (q *Queries) UpdateSubCategory(ctx context.Context, arg UpdateSubCategoryPa
 		&i.ID,
 		&i.Name,
 		&i.CategoryID,
+		&i.CategoryName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
