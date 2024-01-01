@@ -4,13 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	config "github.com/olartbaraq/spectrumshelf/configs"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
+	"github.com/redis/go-redis/v9"
+	"gopkg.in/gomail.v2"
 )
 
 type User struct {
@@ -31,6 +36,15 @@ type UpdateUserPasswordParams struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UserCodeInput struct {
+	UserID int64  `json:"user_id" binding:"required"`
+	Code   string `json:"code" binding:"required"`
+}
+
+type ForgotPasswordInput struct {
+	Email string `form:"email"`
+}
+
 type UserResponse struct {
 	ID        int64     `json:"id"`
 	Lastname  string    `json:"lastname"`
@@ -49,13 +63,31 @@ type DeleteUserParam struct {
 
 func (u User) router(server *Server) {
 	u.server = server
-	serverGroup := server.router.Group("/users", AuthenticatedMiddleware())
-	serverGroup.GET("/allUsers", u.listUsers)
-	serverGroup.PUT("/update", u.updateUser)
-	serverGroup.PUT("/update/password", u.updatePassword)
-	serverGroup.DELETE("/deactivate", u.deleteUser)
-	serverGroup.GET("/profile", u.userProfile)
+	serverGroup := server.router.Group("/users")
+	serverGroup.GET("/allUsers", u.listUsers, AuthenticatedMiddleware())
+	serverGroup.PUT("/update", u.updateUser, AuthenticatedMiddleware())
+	serverGroup.PUT("/update/password", u.updatePassword, AuthenticatedMiddleware())
+	serverGroup.DELETE("/deactivate", u.deleteUser, AuthenticatedMiddleware())
+	serverGroup.GET("/profile", u.userProfile, AuthenticatedMiddleware())
+	serverGroup.GET("/get_email", u.getUserEmail, AuthenticatedMiddleware())
+	serverGroup.GET("/send_code_to_user", u.sendCodetoUser)
+	serverGroup.POST("/verify_code", u.verifyCode)
 }
+
+//var VerificationCodes = make(map[int64]VerificationCode)
+
+type VerificationResponse struct {
+	UserID        int64
+	GeneratedCode string
+	ExpiresAt     time.Duration
+	Email         string
+}
+
+var Rdb = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	Password: config.EnvRedisPassword(),
+	DB:       0, // use default DB
+})
 
 func extractTokenFromRequest(ctx *gin.Context) (string, error) {
 	// Extract the token from the Authorization header
@@ -339,6 +371,236 @@ func (u *User) userProfile(ctx *gin.Context) {
 		"message": "user fetched successfully",
 		"data":    userResponse,
 	})
+}
+
+func (u *User) getUserEmail(ctx *gin.Context) {
+
+	user := ForgotPasswordInput{}
+
+	if err := ctx.ShouldBindQuery(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	if strings.TrimSpace(user.Email) == "" {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "no input entered",
+		})
+		return
+	}
+
+	userEmail, err := u.server.queries.GetUserByEmail(context.Background(), strings.ToLower(user.Email))
+
+	if err == sql.ErrNoRows {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"statusCode": http.StatusNotFound,
+			"Error":      err.Error(),
+			"message":    "The requested user with the specified email does not exist.",
+		})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	userResponse := UserResponse{
+		ID:        userEmail.ID,
+		Lastname:  userEmail.Lastname,
+		Firstname: userEmail.Firstname,
+		Email:     userEmail.Email,
+		Phone:     userEmail.Phone,
+		Address:   userEmail.Address,
+		IsAdmin:   userEmail.IsAdmin,
+		CreatedAt: userEmail.CreatedAt,
+		UpdatedAt: userEmail.UpdatedAt,
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"statusCode": http.StatusOK,
+		"message":    "user retrieved successfully",
+		"data":       userResponse,
+	})
+}
+
+func (u *User) sendCodetoUser(ctx *gin.Context) {
+	// Bind User Input for validation
+
+	user := ForgotPasswordInput{}
+
+	if err := ctx.ShouldBindQuery(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	if strings.TrimSpace(user.Email) == "" {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "no input entered",
+		})
+		return
+	}
+
+	userGot, err := u.server.queries.GetUserByEmail(context.Background(), strings.ToLower(user.Email))
+
+	if err == sql.ErrNoRows {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"statusCode": http.StatusNotFound,
+			"Error":      err.Error(),
+			"message":    "The requested user with the specified email does not exist.",
+		})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	// GENERATE THE CODE AND STORE
+	codeChan := make(chan string)
+
+	go func(c chan string) {
+		//Generate a 4 digit random code
+		source := rand.NewSource(time.Now().UnixNano())
+		rng := rand.New(source)
+		code := rng.Intn(9000) + 1000
+		c <- fmt.Sprintf("%04d", code)
+
+	}(codeChan)
+
+	returnedCode := <-codeChan
+
+	stringUserId := fmt.Sprintf("%d", userGot.ID)
+
+	timeout := 10 * time.Minute
+
+	//fmt.Println("Did we get here?")
+
+	err = Rdb.Set(ctx, stringUserId, returnedCode, timeout).Err()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"statusCode": http.StatusInternalServerError,
+			"Error":      err.Error(),
+		})
+		return
+	}
+
+	// TODO: Send generated code to the user email address
+
+	errorChan := make(chan error)
+
+	go func(userEmail, code string, e chan<- error) {
+		sender := config.EnvGoogleUsername()
+		password := config.EnvGooglePassword()
+		smtpHost := "smtp.gmail.com"
+		smtpPort := 587
+
+		message := gomail.NewMessage()
+		message.SetHeader("From", sender)
+		message.SetHeader("To", userEmail)
+		message.SetHeader("Subject", "Verification Code")
+		message.SetBody("text/plain", "Your verification code is: "+code)
+
+		// Set up the email server configuration
+		dialer := gomail.NewDialer(smtpHost, smtpPort, sender, password)
+
+		// Send the email
+		if err := dialer.DialAndSend(message); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"statusCode": http.StatusInternalServerError,
+				"Error":      err.Error(),
+			})
+			return
+		}
+
+		e <- nil
+
+	}(userGot.Email, returnedCode, errorChan)
+
+	errVal := <-errorChan
+
+	coderesponse := VerificationResponse{
+		UserID:        userGot.ID,
+		GeneratedCode: returnedCode,
+		ExpiresAt:     timeout,
+		Email:         userGot.Email,
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"statusCode": http.StatusOK,
+		"message":    "code sent to user successfully",
+		"anyError":   errVal,
+		"data":       coderesponse,
+	})
+
+	//VerificationCodes[userGot.ID] = VerificationCode{Code: returnedCode, ExpiresAt: returnedTime}
+}
+
+func (u *User) verifyCode(ctx *gin.Context) {
+
+	codeInput := UserCodeInput{}
+
+	if err := ctx.ShouldBindJSON(&codeInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	stringUserId := fmt.Sprintf("%d", codeInput.UserID)
+	storedCode, err := Rdb.Get(ctx, stringUserId).Result()
+	if err == redis.Nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"statusCode": http.StatusNotFound,
+			"error":      err.Error(),
+			"message":    "Key does not exist",
+		})
+		return
+	} else if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"statusCode": http.StatusInternalServerError,
+			"Error":      err.Error(),
+		})
+		return
+	}
+
+	timeout := 10 * time.Minute
+
+	expirationTime := time.Now().Add(timeout)
+
+	// Check if the code expiry is less than 10 min
+	if time.Now().After(expirationTime) {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "code expired",
+		})
+		return
+	}
+
+	if codeInput.Code != storedCode {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"statusCode": http.StatusUnauthorized,
+			"error":      "Invalid verification code",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"statusCode": http.StatusOK,
+		"message":    "code verification successful",
+	})
+
+	Rdb.Del(ctx, stringUserId)
+
+	// Then call the update password endpoint.
+
 }
 
 func (u *User) updatePassword(ctx *gin.Context) {

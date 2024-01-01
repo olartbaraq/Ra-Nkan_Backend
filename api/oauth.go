@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
@@ -52,9 +53,9 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 		return
 	}
 
-	userInfoChan := make(chan *UserInfo)
+	userInfoChan := make(chan *UserInfo, 1)
 
-	go func(user_token string, u chan *UserInfo) {
+	go func(user_token string, u chan<- *UserInfo) {
 		url := fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s", user_token)
 
 		resp, err := http.Get(url)
@@ -95,33 +96,71 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 		}
 
 		u <- &userInfo
+		//fmt.Println(userInfo)
 	}(user_token.ID_token, userInfoChan)
 
-	userInfo := <-userInfoChan
+	select {
+	case userInfo := <-userInfoChan:
 
-	oAuthDbUser, err := o.server.queries.GetUserByEmail(context.Background(), strings.ToLower(userInfo.Email))
+		oAuthDbUser, err := o.server.queries.GetUserByEmail(context.Background(), strings.ToLower(userInfo.Email))
 
-	if err == sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 
-		arg := db.CreateUserParams{
-			Lastname:       userInfo.FamilyName,
-			Firstname:      userInfo.GivenName,
-			Email:          strings.ToLower(userInfo.Email),
-			Phone:          "",
-			Address:        "",
-			HashedPassword: "",
-		}
+			arg := db.CreateUserParams{
+				Lastname:       userInfo.FamilyName,
+				Firstname:      userInfo.GivenName,
+				Email:          strings.ToLower(userInfo.Email),
+				Phone:          "",
+				Address:        "",
+				HashedPassword: "",
+			}
 
-		oAuthUserToSave, err := o.server.queries.CreateUser(context.Background(), arg)
+			oAuthUserToSave, err := o.server.queries.CreateUser(context.Background(), arg)
 
-		if err != nil {
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Error": err.Error(),
+				})
+				return
+			}
+
+			token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin)
+
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"Error": err.Error(),
+				})
+				return
+			}
+
+			userResponse := UserResponse{
+				ID:        oAuthUserToSave.ID,
+				Lastname:  oAuthUserToSave.Lastname,
+				Firstname: oAuthUserToSave.Firstname,
+				Email:     oAuthUserToSave.Email,
+				Phone:     oAuthUserToSave.Phone,
+				Address:   oAuthUserToSave.Address,
+				IsAdmin:   oAuthUserToSave.IsAdmin,
+				CreatedAt: oAuthUserToSave.CreatedAt,
+				UpdatedAt: oAuthUserToSave.UpdatedAt,
+			}
+
+			ctx.JSON(http.StatusOK, gin.H{
+				"statusCode": http.StatusOK,
+				"status":     "success",
+				"message":    "login successful",
+				"token":      token,
+				"data":       userResponse,
+			})
+			return
+		} else if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Error": err.Error(),
 			})
 			return
 		}
 
-		token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin)
+		token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin)
 
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -131,15 +170,15 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 		}
 
 		userResponse := UserResponse{
-			ID:        oAuthUserToSave.ID,
-			Lastname:  oAuthUserToSave.Lastname,
-			Firstname: oAuthUserToSave.Firstname,
-			Email:     oAuthUserToSave.Email,
-			Phone:     oAuthUserToSave.Phone,
-			Address:   oAuthUserToSave.Address,
-			IsAdmin:   oAuthUserToSave.IsAdmin,
-			CreatedAt: oAuthUserToSave.CreatedAt,
-			UpdatedAt: oAuthUserToSave.UpdatedAt,
+			ID:        oAuthDbUser.ID,
+			Lastname:  oAuthDbUser.Lastname,
+			Firstname: oAuthDbUser.Firstname,
+			Email:     oAuthDbUser.Email,
+			Phone:     oAuthDbUser.Phone,
+			Address:   oAuthDbUser.Address,
+			IsAdmin:   oAuthDbUser.IsAdmin,
+			CreatedAt: oAuthDbUser.CreatedAt,
+			UpdatedAt: oAuthDbUser.UpdatedAt,
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{
@@ -149,41 +188,14 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			"token":      token,
 			"data":       userResponse,
 		})
-		return
-	} else if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"Error": err.Error(),
+
+	case <-time.After(10 * time.Second):
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "timeout fetching user information",
 		})
 		return
 	}
 
-	token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin)
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"Error": err.Error(),
-		})
-		return
-	}
-
-	userResponse := UserResponse{
-		ID:        oAuthDbUser.ID,
-		Lastname:  oAuthDbUser.Lastname,
-		Firstname: oAuthDbUser.Firstname,
-		Email:     oAuthDbUser.Email,
-		Phone:     oAuthDbUser.Phone,
-		Address:   oAuthDbUser.Address,
-		IsAdmin:   oAuthDbUser.IsAdmin,
-		CreatedAt: oAuthDbUser.CreatedAt,
-		UpdatedAt: oAuthDbUser.UpdatedAt,
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"statusCode": http.StatusOK,
-		"status":     "success",
-		"message":    "login successful",
-		"token":      token,
-		"data":       userResponse,
-	})
+	close(userInfoChan)
 
 }

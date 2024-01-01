@@ -19,6 +19,20 @@ services:
       - POSTGRES_DB=ra_nkan_db
     ports:
       - 5433:5432
+
+  redis-live:
+    container_name: redis_live
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - /path/to/local/dаta:/root/redis
+      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+    ports:
+      - 6379:6379
   
   api:
     container_name: ra_nkan_api
@@ -28,8 +42,8 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DB_SOURCE_LIVE=postgres://root:testing@172.25.0.1:5433/ra_nkan_db?sslmode=disable
+      - DB_SOURCE_LIVE=postgres://root:testing@172.21.0.1:5433/ra_nkan_db?sslmode=disable
     depends_on:
       - postgres-live
-    entrypoint: ["/app/wait-for.sh", "172.25.0.1:5433", "--", "/app/start.sh"]
+    entrypoint: ["/app/wait-for.sh", "172.21.0.1:5433", "--", "/app/start.sh"]
     command: ["/app/main"]

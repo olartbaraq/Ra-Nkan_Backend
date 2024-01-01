@@ -125,10 +125,10 @@ func (p *Product) createProductByFile(ctx *gin.Context) {
 	form, err := ctx.MultipartForm()
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"statusCode": http.StatusInternalServerError,
+		ctx.JSON(http.StatusUnsupportedMediaType, gin.H{
+			"statusCode": http.StatusUnsupportedMediaType,
 			"Error":      err.Error(),
-			"data":       "Select a file to upload",
+			"data":       "select an image file to upload",
 		})
 		return
 	}
