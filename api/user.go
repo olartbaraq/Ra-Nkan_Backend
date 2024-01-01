@@ -495,6 +495,8 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 
 	errorChan := make(chan error)
 
+	//fmt.Println("About to enter send email goroutine")
+
 	go func(userEmail, code string, e chan<- error) {
 		sender := config.EnvGoogleUsername()
 		password := config.EnvGooglePassword()
@@ -524,6 +526,8 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 	}(userGot.Email, returnedCode, errorChan)
 
 	errVal := <-errorChan
+
+	//fmt.Println("Email goroutine ended")
 
 	coderesponse := VerificationResponse{
 		UserID:        userGot.ID,
