@@ -57,22 +57,22 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 
 	go func(user_token string, u chan<- *UserInfo) {
 		url := fmt.Sprintf("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=%s", user_token)
+		//fmt.Println(url)
 
 		resp, err := http.Get(url)
+		//fmt.Println(resp)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"Error":   err.Error(),
 				"message": "error making request to Google API",
 			})
 			return
-
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			ctx.JSON(http.StatusUnauthorized, gin.H{
-				"Error":   err.Error(),
-				"message": "google API returned non-OK status",
+				"error": "google API returned non-OK status",
 			})
 			return
 		}
@@ -95,7 +95,10 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			return
 		}
 
-		u <- &userInfo
+		if userInfo.FamilyName != "" && userInfo.GivenName != "" && userInfo.Email != "" {
+			u <- &userInfo
+		}
+
 		//fmt.Println(userInfo)
 	}(user_token.ID_token, userInfoChan)
 
