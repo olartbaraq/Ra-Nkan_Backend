@@ -24,12 +24,13 @@ dock_start:
 	#start the docker processes
 	docker start spectrumshelf_postgres
 	docker start ra_nkan_live
+	#docker stop ra_nkan_api
 
 dock_stop:
 	#stop the docker processes
 	docker stop spectrumshelf_postgres
 	docker stop ra_nkan_live
-	docker stop ra_nkan_api
+	#docker stop ra_nkan_api
 
 m_up:
 	#run a migration to the database
