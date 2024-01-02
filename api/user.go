@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -492,12 +494,33 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 	}
 
 	// TODO: Send generated code to the user email address
+	var wg sync.WaitGroup
 
 	errorChan := make(chan error)
+
+	wg.Add(1)
 
 	//fmt.Println("About to enter send email goroutine")
 
 	go func(userEmail, code string, e chan<- error) {
+		defer wg.Done()
+
+		//fmt.Println("About to read html")
+		filereader, err := os.ReadFile("verification.html")
+		if err != nil {
+			e <- err
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"statusCode": http.StatusInternalServerError,
+				"Error":      err.Error(),
+			})
+			ctx.Abort()
+			return
+		}
+
+		messagetoSend := string(filereader)
+
+		//fmt.Println("File converted")
+
 		sender := config.EnvGoogleUsername()
 		password := config.EnvGooglePassword()
 		smtpHost := "smtp.gmail.com"
@@ -508,9 +531,12 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		message.SetHeader("To", userEmail)
 		message.SetHeader("Subject", "Verification Code")
 		message.SetBody("text/plain", "Your verification code is: "+code)
+		message.AddAlternative("text/html", messagetoSend+"Your verification code is: "+code)
 
 		// Set up the email server configuration
 		dialer := gomail.NewDialer(smtpHost, smtpPort, sender, password)
+
+		//fmt.Println("we got to dialer")
 
 		// Send the email
 		if err := dialer.DialAndSend(message); err != nil {
@@ -518,12 +544,20 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 				"statusCode": http.StatusInternalServerError,
 				"Error":      err.Error(),
 			})
+			e <- err
 			return
 		}
+
+		//fmt.Println("we sent the mail")
 
 		e <- nil
 
 	}(userGot.Email, returnedCode, errorChan)
+
+	go func() {
+		wg.Wait()
+		close(errorChan)
+	}()
 
 	errVal := <-errorChan
 
