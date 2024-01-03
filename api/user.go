@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	config "github.com/olartbaraq/spectrumshelf/configs"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
+	redisInit "github.com/olartbaraq/spectrumshelf/redis"
 	"github.com/olartbaraq/spectrumshelf/utils"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/gomail.v2"
@@ -85,11 +86,13 @@ type VerificationResponse struct {
 	Email         string
 }
 
-var Rdb = redis.NewClient(&redis.Options{
-	Addr:     "localhost:6379",
-	Password: config.EnvRedisPassword(),
-	DB:       0, // use default DB
-})
+// var Rdb = redis.NewClient(&redis.Options{
+// 	Addr:     "localhost:6379",
+// 	Password: config.EnvRedisPassword(),
+// 	DB:       0, // use default DB
+// })
+
+var Rdb = redisInit.RedisInit()
 
 func extractTokenFromRequest(ctx *gin.Context) (string, error) {
 	// Extract the token from the Authorization header

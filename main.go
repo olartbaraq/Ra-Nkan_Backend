@@ -5,6 +5,8 @@ import (
 )
 
 func main() {
+
+	//rabbitmq.RabbitMQServer()
 	server := api.NewServer(".")
 	server.Start(8000)
 }
