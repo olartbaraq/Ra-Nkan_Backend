@@ -69,6 +69,21 @@ type GetProductParams struct {
 	Name string `form:"name"`
 }
 
+type ProductResponse struct {
+	ID              int64    `json:"id"`
+	Name            string   `json:"name"`
+	Description     string   `json:"description"`
+	Price           string   `json:"price"`
+	QtyAval         int32    `json:"qty_aval"`
+	ShopID          int64    `json:"shop_id"`
+	Images          []string `json:"image_urls"`
+	ShopName        string   `json:"shop_name"`
+	CategoryID      int64    `json:"category_id"`
+	SubCategoryID   int64    `json:"subcategory_id"`
+	CategoryName    string   `json:"category_name"`
+	SubCategoryName string   `json:"subcategory_name"`
+}
+
 func (p Product) router(server *Server) {
 
 	p.server = server
@@ -79,6 +94,7 @@ func (p Product) router(server *Server) {
 	serverGroup.GET("/get_products_orders", p.getProductOrders)
 	serverGroup.GET("/get_product_by_id", p.getProductById)
 	serverGroup.GET("/get_products_by_name", p.getProductByName)
+	serverGroup.GET("/list_products", p.listProducts)
 
 	//serverGroup.POST("/login", a.login)
 }
@@ -458,5 +474,49 @@ func (p *Product) getProductByName(ctx *gin.Context) {
 		"status":  "success",
 		"message": "products retrieved successfully",
 		"data":    productsByName,
+	})
+}
+
+func (p *Product) listProducts(ctx *gin.Context) {
+	arg := db.ListAllProductsParams{
+		Limit:  10,
+		Offset: 0,
+	}
+
+	products, err := p.server.queries.ListAllProducts(context.Background(), arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	allProducts := []ProductResponse{}
+
+	for _, value := range products {
+		productResponse := ProductResponse{
+			ID:              value.ID,
+			Name:            value.Name,
+			Description:     value.Description,
+			Price:           value.Price,
+			QtyAval:         value.QtyAval,
+			Images:          value.Images,
+			ShopID:          value.ShopID,
+			ShopName:        value.ShopName,
+			CategoryID:      value.CategoryID,
+			SubCategoryID:   value.SubCategoryID,
+			CategoryName:    value.CategoryName,
+			SubCategoryName: value.SubCategoryName,
+		}
+
+		num := productResponse
+		allProducts = append(allProducts, num)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "all products fetched sucessfully",
+		"data":    allProducts,
 	})
 }
