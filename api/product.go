@@ -76,7 +76,7 @@ type ProductResponse struct {
 	Price           string   `json:"price"`
 	QtyAval         int32    `json:"qty_aval"`
 	ShopID          int64    `json:"shop_id"`
-	Images          []string `json:"image_urls"`
+	Images          []string `json:"images"`
 	ShopName        string   `json:"shop_name"`
 	CategoryID      int64    `json:"category_id"`
 	SubCategoryID   int64    `json:"subcategory_id"`
