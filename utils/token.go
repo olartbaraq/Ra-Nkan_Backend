@@ -40,7 +40,7 @@ func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
 	claims := jwtCustomClaim{
 		Id:        userID,
 		IsAdmin:   isAdmin,
-		ExpiresAt: time.Now().Add(1 * time.Hour).Unix(),
+		ExpiresAt: time.Now().Add(15 * time.Minute).Unix(),
 		Role:      role,
 	}
 

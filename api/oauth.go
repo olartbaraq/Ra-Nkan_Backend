@@ -192,7 +192,7 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			"data":       userResponse,
 		})
 
-	case <-time.After(10 * time.Second):
+	case <-time.After(5 * time.Second):
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"error": "timeout fetching user information",
 		})
