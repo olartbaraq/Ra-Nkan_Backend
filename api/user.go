@@ -533,8 +533,10 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		message.SetHeader("From", sender)
 		message.SetHeader("To", userEmail)
 		message.SetHeader("Subject", "Verification Code")
-		message.SetBody("text/plain", "Your verification code is: "+code)
-		message.AddAlternative("text/html", messagetoSend+"Your verification code is: "+code)
+		message.SetBody("text/plain", "Hi"+userEmail)
+		message.AddAlternative("text/plain", "We've received your request for a single-use code to use with your Ra'Nkan account.")
+		message.AddAlternative("text/plain", "Your verification code is: "+code)
+		message.AddAlternative("text/html", messagetoSend)
 
 		// Set up the email server configuration
 		dialer := gomail.NewDialer(smtpHost, smtpPort, sender, password)
@@ -563,6 +565,11 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 	}()
 
 	errVal := <-errorChan
+
+	if errVal != nil {
+		ctx.Abort()
+		return
+	}
 
 	//fmt.Println("Email goroutine ended")
 
