@@ -49,15 +49,16 @@ type ForgotPasswordInput struct {
 }
 
 type UserResponse struct {
-	ID        int64     `json:"id"`
-	Lastname  string    `json:"lastname"`
-	Firstname string    `json:"firstname"`
-	Phone     string    `json:"phone"`
-	Address   string    `json:"address"`
-	Email     string    `json:"email"`
-	IsAdmin   bool      `json:"is_admin"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         int64     `json:"id"`
+	Lastname   string    `json:"lastname"`
+	Firstname  string    `json:"firstname"`
+	Phone      string    `json:"phone"`
+	Address    string    `json:"address"`
+	Email      string    `json:"email"`
+	IsLoggedIn bool      `json:"isLoggedIn"`
+	IsAdmin    bool      `json:"is_admin"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type DeleteUserParam struct {
@@ -521,9 +522,9 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		}
 
 		messagetoSend := string(filereader)
-
+		_ = messagetoSend
 		//fmt.Println("File converted")
-
+		newmessage := fmt.Sprintf("Hi %v,\n\nWe've received your request for a single-use code to use with your Ra'Nkan account.\n\nYour verification code is: %v,\n\nIf you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.\nThanks,\nThe Microsoft account team\n", userEmail, code)
 		sender := config.EnvGoogleUsername()
 		password := config.EnvGooglePassword()
 		smtpHost := "smtp.gmail.com"
@@ -533,10 +534,9 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		message.SetHeader("From", sender)
 		message.SetHeader("To", userEmail)
 		message.SetHeader("Subject", "Verification Code")
-		message.SetBody("text/plain", "Hi"+userEmail)
-		message.AddAlternative("text/plain", "We've received your request for a single-use code to use with your Ra'Nkan account.")
-		message.AddAlternative("text/plain", "Your verification code is: "+code)
+		message.SetBody("text/plain", newmessage)
 		message.AddAlternative("text/html", messagetoSend)
+		//message.Embed()
 
 		// Set up the email server configuration
 		dialer := gomail.NewDialer(smtpHost, smtpPort, sender, password)

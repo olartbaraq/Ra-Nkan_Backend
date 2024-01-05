@@ -137,15 +137,16 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			}
 
 			userResponse := UserResponse{
-				ID:        oAuthUserToSave.ID,
-				Lastname:  oAuthUserToSave.Lastname,
-				Firstname: oAuthUserToSave.Firstname,
-				Email:     oAuthUserToSave.Email,
-				Phone:     oAuthUserToSave.Phone,
-				Address:   oAuthUserToSave.Address,
-				IsAdmin:   oAuthUserToSave.IsAdmin,
-				CreatedAt: oAuthUserToSave.CreatedAt,
-				UpdatedAt: oAuthUserToSave.UpdatedAt,
+				ID:         oAuthUserToSave.ID,
+				Lastname:   oAuthUserToSave.Lastname,
+				Firstname:  oAuthUserToSave.Firstname,
+				Email:      oAuthUserToSave.Email,
+				Phone:      oAuthUserToSave.Phone,
+				Address:    oAuthUserToSave.Address,
+				IsAdmin:    oAuthUserToSave.IsAdmin,
+				IsLoggedIn: true,
+				CreatedAt:  oAuthUserToSave.CreatedAt,
+				UpdatedAt:  oAuthUserToSave.UpdatedAt,
 			}
 
 			ctx.JSON(http.StatusOK, gin.H{
@@ -173,15 +174,16 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 		}
 
 		userResponse := UserResponse{
-			ID:        oAuthDbUser.ID,
-			Lastname:  oAuthDbUser.Lastname,
-			Firstname: oAuthDbUser.Firstname,
-			Email:     oAuthDbUser.Email,
-			Phone:     oAuthDbUser.Phone,
-			Address:   oAuthDbUser.Address,
-			IsAdmin:   oAuthDbUser.IsAdmin,
-			CreatedAt: oAuthDbUser.CreatedAt,
-			UpdatedAt: oAuthDbUser.UpdatedAt,
+			ID:         oAuthDbUser.ID,
+			Lastname:   oAuthDbUser.Lastname,
+			Firstname:  oAuthDbUser.Firstname,
+			Email:      oAuthDbUser.Email,
+			Phone:      oAuthDbUser.Phone,
+			Address:    oAuthDbUser.Address,
+			IsAdmin:    oAuthDbUser.IsAdmin,
+			IsLoggedIn: true,
+			CreatedAt:  oAuthDbUser.CreatedAt,
+			UpdatedAt:  oAuthDbUser.UpdatedAt,
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{

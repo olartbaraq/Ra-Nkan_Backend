@@ -96,15 +96,16 @@ func (a *Auth) register(ctx *gin.Context) {
 	}
 
 	userResponse := UserResponse{
-		ID:        userToSave.ID,
-		Lastname:  userToSave.Lastname,
-		Firstname: userToSave.Firstname,
-		Email:     userToSave.Email,
-		Phone:     userToSave.Phone,
-		Address:   userToSave.Address,
-		IsAdmin:   userToSave.IsAdmin,
-		CreatedAt: userToSave.CreatedAt,
-		UpdatedAt: userToSave.UpdatedAt,
+		ID:         userToSave.ID,
+		Lastname:   userToSave.Lastname,
+		Firstname:  userToSave.Firstname,
+		Email:      userToSave.Email,
+		Phone:      userToSave.Phone,
+		Address:    userToSave.Address,
+		IsAdmin:    userToSave.IsAdmin,
+		IsLoggedIn: false,
+		CreatedAt:  userToSave.CreatedAt,
+		UpdatedAt:  userToSave.UpdatedAt,
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
@@ -195,15 +196,16 @@ func (a Auth) login(ctx *gin.Context) {
 	}
 
 	userResponse := UserResponse{
-		ID:        dbUser.ID,
-		Lastname:  dbUser.Lastname,
-		Firstname: dbUser.Firstname,
-		Email:     dbUser.Email,
-		Phone:     dbUser.Phone,
-		Address:   dbUser.Address,
-		IsAdmin:   dbUser.IsAdmin,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		ID:         dbUser.ID,
+		Lastname:   dbUser.Lastname,
+		Firstname:  dbUser.Firstname,
+		Email:      dbUser.Email,
+		Phone:      dbUser.Phone,
+		Address:    dbUser.Address,
+		IsAdmin:    dbUser.IsAdmin,
+		IsLoggedIn: true,
+		CreatedAt:  dbUser.CreatedAt,
+		UpdatedAt:  dbUser.UpdatedAt,
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
