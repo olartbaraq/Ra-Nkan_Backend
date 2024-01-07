@@ -38,6 +38,8 @@ func (a Auth) router(server *Server) {
 	serverGroup := server.router.Group("/auth")
 	serverGroup.POST("/register", a.register)
 	serverGroup.POST("/login", a.login)
+	serverGroup.GET("/refresh", a.RefreshAccessToken)
+	serverGroup.GET("/logout", a.LogoutUser)
 }
 
 func (a *Auth) register(ctx *gin.Context) {
@@ -103,7 +105,7 @@ func (a *Auth) register(ctx *gin.Context) {
 		Phone:      userToSave.Phone,
 		Address:    userToSave.Address,
 		IsAdmin:    userToSave.IsAdmin,
-		IsLoggedIn: false,
+		IsLoggedIn: "false",
 		CreatedAt:  userToSave.CreatedAt,
 		UpdatedAt:  userToSave.UpdatedAt,
 	}
@@ -186,7 +188,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin)
+	access_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config.AccessTokenExpiresIn)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -194,6 +196,19 @@ func (a Auth) login(ctx *gin.Context) {
 		})
 		return
 	}
+
+	refresh_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config.RefreshTokenExpiresIn)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	ctx.SetCookie("access_token", access_token, a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", refresh_token, a.server.config.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 	userResponse := UserResponse{
 		ID:         dbUser.ID,
@@ -203,16 +218,59 @@ func (a Auth) login(ctx *gin.Context) {
 		Phone:      dbUser.Phone,
 		Address:    dbUser.Address,
 		IsAdmin:    dbUser.IsAdmin,
-		IsLoggedIn: true,
+		IsLoggedIn: "true",
 		CreatedAt:  dbUser.CreatedAt,
 		UpdatedAt:  dbUser.UpdatedAt,
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"statusCode": http.StatusOK,
-		"status":     "success",
-		"message":    "login successful",
-		"token":      token,
-		"data":       userResponse,
+		"statusCode":   http.StatusOK,
+		"status":       "success",
+		"message":      "login successful",
+		"access_token": access_token,
+		//"refresh_token": refresh_token,
+		"data": userResponse,
 	})
+}
+
+func (a *Auth) RefreshAccessToken(ctx *gin.Context) {
+
+	message := "could not refresh access token"
+
+	cookie, err := ctx.Cookie("refresh_token")
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": message})
+		return
+	}
+
+	userId, _, err := tokenManager.VerifyToken(cookie)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+
+	user, err := a.server.queries.GetUserById(context.Background(), userId)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
+		return
+	}
+
+	access_token, err := tokenManager.CreateToken(user.ID, user.IsAdmin, a.server.config.AccessTokenExpiresIn)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+
+	ctx.SetCookie("access_token", access_token, a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "access_token": access_token})
+}
+
+func (a *Auth) LogoutUser(ctx *gin.Context) {
+	ctx.SetCookie("access_token", "", -1, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", "", -1, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "", -1, "/", "localhost", false, true)
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }

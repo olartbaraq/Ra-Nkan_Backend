@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/olartbaraq/spectrumshelf/api"
 	"github.com/olartbaraq/spectrumshelf/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +32,7 @@ func TestCreateToken(t *testing.T) {
 		isAdmin: false,
 	}
 
-	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin)
+	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin, api.ConfigViper.AccessTokenExpiresIn)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 }
@@ -43,14 +44,14 @@ func TestVerifyToken(t *testing.T) {
 		isAdmin: true,
 	}
 
-	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin)
+	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin, api.ConfigViper.AccessTokenExpiresIn)
 
 	if err != nil {
 		t.Fatalf("Error generating token: %v", err)
 		return
 	}
 
-	claimToken, role, err := (returnJWT()).VerifyToken(&token)
+	claimToken, role, err := (returnJWT()).VerifyToken(token)
 	assert.NoError(t, err)
 	assert.Equal(t, role, "admin")
 	assert.NotEmpty(t, claimToken)

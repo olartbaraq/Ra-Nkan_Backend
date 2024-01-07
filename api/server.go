@@ -22,6 +22,8 @@ type Server struct {
 
 var tokenManager *utils.JWTToken
 
+var ConfigViper *utils.Config
+
 func NewServer(envPath string) *Server {
 
 	config, err := utils.LoadDBConfig(envPath)

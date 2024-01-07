@@ -1,12 +1,20 @@
 package utils
 
-import "github.com/spf13/viper"
+import (
+	"time"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	DBdriver     string `mapstructure:"DB_DRIVER"`
-	DBsource     string `mapstructure:"DB_SOURCE"`
-	DBsourceLive string `mapstructure:"DB_SOURCE_LIVE"`
-	SigningKey   string `mapstructure:"SIGNING_KEY"`
+	DBdriver              string        `mapstructure:"DB_DRIVER"`
+	DBsource              string        `mapstructure:"DB_SOURCE"`
+	DBsourceLive          string        `mapstructure:"DB_SOURCE_LIVE"`
+	SigningKey            string        `mapstructure:"SIGNING_KEY"`
+	AccessTokenExpiresIn  time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
+	RefreshTokenExpiresIn time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRED_IN"`
+	AccessTokenMaxAge     int           `mapstructure:"ACCESS_TOKEN_MAXAGE"`
+	RefreshTokenMaxAge    int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 }
 
 func LoadDBConfig(path string) (config *Config, err error) {

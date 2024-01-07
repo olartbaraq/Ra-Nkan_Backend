@@ -28,7 +28,7 @@ func NewJWTToken(config *Config) *JWTToken {
 	return &JWTToken{config: config}
 }
 
-func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
+func (j *JWTToken) CreateToken(userID int64, isAdmin bool, ttl time.Duration) (string, error) {
 
 	var role string
 
@@ -40,7 +40,7 @@ func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
 	claims := jwtCustomClaim{
 		Id:        userID,
 		IsAdmin:   isAdmin,
-		ExpiresAt: time.Now().Add(15 * time.Minute).Unix(),
+		ExpiresAt: time.Now().Add(ttl * time.Minute).Unix(),
 		Role:      role,
 	}
 
@@ -54,8 +54,8 @@ func (j *JWTToken) CreateToken(userID int64, isAdmin bool) (string, error) {
 	return string(tokenString), nil
 }
 
-func (j *JWTToken) VerifyToken(tokenString *string) (int64, string, error) {
-	token, err := jwt.ParseWithClaims(*tokenString, &jwtCustomClaim{}, func(t *jwt.Token) (interface{}, error) {
+func (j *JWTToken) VerifyToken(tokenString string) (int64, string, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwtCustomClaim{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid authentication token")
 		}

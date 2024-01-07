@@ -55,7 +55,7 @@ type UserResponse struct {
 	Phone      string    `json:"phone"`
 	Address    string    `json:"address"`
 	Email      string    `json:"email"`
-	IsLoggedIn bool      `json:"isLoggedIn"`
+	IsLoggedIn string    `json:"isLoggedIn"`
 	IsAdmin    bool      `json:"is_admin"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
@@ -70,10 +70,10 @@ func (u User) router(server *Server) {
 	serverGroup := server.router.Group("/users")
 	serverGroup.GET("/allUsers", u.listUsers, AuthenticatedMiddleware())
 	serverGroup.PUT("/update", u.updateUser, AuthenticatedMiddleware())
-	serverGroup.PUT("/update/password", u.updatePassword, AuthenticatedMiddleware())
+	serverGroup.PUT("/update_password", u.updatePassword, AuthenticatedMiddleware())
 	serverGroup.DELETE("/deactivate", u.deleteUser, AuthenticatedMiddleware())
 	serverGroup.GET("/profile", u.userProfile, AuthenticatedMiddleware())
-	serverGroup.GET("/get_email", u.getUserEmail, AuthenticatedMiddleware())
+	serverGroup.GET("/get_email", u.getUserEmail)
 	serverGroup.GET("/send_code_to_user", u.sendCodetoUser)
 	serverGroup.POST("/verify_code", u.verifyCode)
 }
@@ -117,7 +117,7 @@ func returnIdRole(tokenString string) (int64, string, error) {
 		return 0, "", errors.New("unauthorized: Missing or invalid token")
 	}
 
-	userId, role, err := tokenManager.VerifyToken(&tokenString)
+	userId, role, err := tokenManager.VerifyToken(tokenString)
 
 	if err != nil {
 		return 0, "", errors.New("failed to verify token")
@@ -524,7 +524,7 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		messagetoSend := string(filereader)
 		_ = messagetoSend
 		//fmt.Println("File converted")
-		newmessage := fmt.Sprintf("Hi %v,\n\nWe've received your request for a single-use code to use with your Ra'Nkan account.\n\nYour verification code is: %v,\n\nIf you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.\nThanks,\nThe Microsoft account team\n", userEmail, code)
+		newmessage := fmt.Sprintf("Hi %v,\n\nWe've received your request for a single-use code to use with your Ra'Nkan account.\n\nYour verification code is: %v,\n\nIf you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.\nThanks,\nThe Ra'Nkan account team\n", userEmail, code)
 		sender := config.EnvGoogleUsername()
 		password := config.EnvGooglePassword()
 		smtpHost := "smtp.gmail.com"
@@ -535,8 +535,8 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		message.SetHeader("To", userEmail)
 		message.SetHeader("Subject", "Verification Code")
 		message.SetBody("text/plain", newmessage)
-		message.AddAlternative("text/html", messagetoSend)
-		//message.Embed()
+		//message.AddAlternative("text/html", messagetoSend)
+		message.Embed("rankan.png")
 
 		// Set up the email server configuration
 		dialer := gomail.NewDialer(smtpHost, smtpPort, sender, password)
@@ -587,8 +587,6 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		"anyError":   errVal,
 		"data":       coderesponse,
 	})
-
-	//VerificationCodes[userGot.ID] = VerificationCode{Code: returnedCode, ExpiresAt: returnedTime}
 }
 
 func (u *User) verifyCode(ctx *gin.Context) {
@@ -646,9 +644,6 @@ func (u *User) verifyCode(ctx *gin.Context) {
 	})
 
 	Rdb.Del(ctx, stringUserId)
-
-	// Then call the update password endpoint.
-
 }
 
 func (u *User) updatePassword(ctx *gin.Context) {
