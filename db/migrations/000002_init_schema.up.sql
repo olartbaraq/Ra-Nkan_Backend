@@ -54,60 +54,15 @@ CREATE TABLE "sub_category" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "carts" (
-  "id" bigserial PRIMARY KEY,
-  "product_id" bigint NOT NULL,
-  "qty_bought" int NOT NULL,
-  "unit_price" numeric(10,2) NOT NULL,
-  "total_price" numeric(10,2) NOT NULL,
-  "user_id" bigint NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
-);
 
 CREATE TABLE "orders" (
   "id" bigserial PRIMARY KEY,
-  "product_id" bigint NOT NULL,
-  "qty_bought" int NOT NULL,
-  "unit_price" numeric(10,2) NOT NULL,
-  "total_price" numeric(10,2) NOT NULL,
   "user_id" bigint NOT NULL,
-  -- "session_id" bigint UNIQUE NOT NULL,
+  "items" jsonb NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "invoice" (
-  "id" bigserial PRIMARY KEY,
-  -- "session_id" bigint NOT NULL,
-  "order_cost" numeric(10,2) NOT NULL,
-  "shipping_cost" numeric(10,2) NOT NULL,
-  "invoice_no" bigserial NOT NULL,
-  "user_id" bigint NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "shipping" (
-  "id" bigserial PRIMARY KEY,
-  "invoice_id" bigint NOT NULL,
-  "courier_name" varchar NOT NULL,
-  "eta" int NOT NULL,
-  "time_left" timestamptz NOT NULL,
-  "time_arrive" timestamptz NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "review" (
-  "id" bigserial PRIMARY KEY,
-  "product_id" bigint NOT NULL,
-  "user_id" bigint NOT NULL,
-  "rating" int NOT NULL,
-  "comment" text NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
-);
 
 CREATE INDEX ON "shops" ("name");
 
@@ -123,15 +78,11 @@ CREATE INDEX ON "sub_category" ("name");
 
 CREATE INDEX ON "sub_category" ("category_id");
 
-CREATE INDEX ON "carts" ("user_id");
 
 COMMENT ON COLUMN "products"."description" IS 'description of the item';
 
-COMMENT ON COLUMN "carts"."user_id" IS 'to know which user has a cart';
-
 COMMENT ON COLUMN "orders"."user_id" IS 'to know which user has an order';
 
--- COMMENT ON COLUMN "orders"."session_id" IS 'to track all orders';
 
 ALTER TABLE "products" ADD FOREIGN KEY ("shop_id") REFERENCES "shops" ("id");
 
@@ -149,20 +100,4 @@ ALTER TABLE "sub_category" ADD FOREIGN KEY ("category_id") REFERENCES "category"
 
 ALTER TABLE "sub_category" ADD FOREIGN KEY ("category_name") REFERENCES "category" ("name");
 
-ALTER TABLE "carts" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
-
-ALTER TABLE "carts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-
-ALTER TABLE "orders" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
-
 ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-
--- ALTER TABLE "invoice" ADD FOREIGN KEY ("session_id") REFERENCES "orders" ("session_id");
-
-ALTER TABLE "invoice" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-
-ALTER TABLE "shipping" ADD FOREIGN KEY ("invoice_id") REFERENCES "invoice" ("id");
-
-ALTER TABLE "review" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
-
-ALTER TABLE "review" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");

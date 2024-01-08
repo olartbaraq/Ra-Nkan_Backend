@@ -76,6 +76,7 @@ func (s *Server) Start(port int) {
 	Shop{}.router(s)
 	Product{}.router(s)
 	Oauth{}.router(s)
+	Order{}.router(s)
 
 	s.router.Run(fmt.Sprintf(":%d", port))
 }

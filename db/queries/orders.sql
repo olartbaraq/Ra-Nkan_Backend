@@ -1,9 +1,13 @@
 -- name: CreateOrder :one
 INSERT INTO orders (
-    product_id,
-    qty_bought,
-    unit_price,
-    total_price,
-    user_id
+    user_id,
+    items
 ) VALUES (
-    $1, $2, $3, $4, $5) RETURNING *;
+    $1, $2) RETURNING *;
+
+-- name: GetOrderById :one
+SELECT * FROM orders WHERE id = $1;
+
+
+-- name: GetOrdersByUser :many
+select * FROM orders WHERE user_id = $1;
