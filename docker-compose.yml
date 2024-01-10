@@ -9,6 +9,9 @@ services:
       - POSTGRES_PASSWORD=testing
     ports:
       - 5432:5432
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.2
 
   postgres-live:
     container_name: ra_nkan_live
@@ -19,6 +22,9 @@ services:
       - POSTGRES_DB=ra_nkan_db
     ports:
       - 5433:5432
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.3
 
   redis-live:
     container_name: redis_live
@@ -33,6 +39,9 @@ services:
       - REDIS_DATABASES=16
     ports:
       - 6379:6379
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.4
   
   api:
     container_name: ra_nkan_api
@@ -42,8 +51,21 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DB_SOURCE_LIVE=postgres://root:testing@172.21.0.1:5433/ra_nkan_db?sslmode=disable
+      - DB_SOURCE_LIVE=postgres://root:testing@172.18.0.3:5433/ra_nkan_db?sslmode=disable
+      - REDIS_ADDRESS=172.18.0.4:6379
     depends_on:
       - postgres-live
-    entrypoint: ["/app/wait-for.sh", "172.21.0.1:5433", "--", "/app/start.sh"]
-    command: ["/app/main"]
+      - redis-live
+    entrypoint: [ "/app/wait-for.sh", "172.18.0.3:5433", "172.18.0.4:6379", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.5
+
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16

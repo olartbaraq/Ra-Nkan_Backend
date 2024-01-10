@@ -7,7 +7,7 @@ import (
 
 func RedisInit() *redis.Client {
 	var Rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     config.EnvRedisAddress(),
 		Password: config.EnvRedisPassword(),
 		DB:       0, // use default DB
 	})

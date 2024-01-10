@@ -224,10 +224,10 @@ func (a Auth) login(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"statusCode":   http.StatusOK,
-		"status":       "success",
-		"message":      "login successful",
-		"access_token": access_token,
+		"statusCode": http.StatusOK,
+		"status":     "success",
+		"message":    "login successful",
+		//"access_token": access_token,
 		//"refresh_token": refresh_token,
 		"data": userResponse,
 	})

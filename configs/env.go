@@ -62,3 +62,11 @@ func EnvRedisPassword() string {
 	}
 	return os.Getenv("REDIS_PASSWORD")
 }
+
+func EnvRedisAddress() string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	return os.Getenv("REDIS_ADDRESS")
+}

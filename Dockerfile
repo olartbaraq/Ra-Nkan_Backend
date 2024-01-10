@@ -18,9 +18,11 @@ COPY .env .
 COPY env.env .
 COPY app.env .
 COPY start.sh .
+RUN chmod +x /app/start.sh
 COPY wait-for.sh .
+RUN chmod +x /app/wait-for.sh
 COPY db/migrations ./migration
 
 EXPOSE 8000
-CMD ["/app/main"]
+CMD [ "/app/main" ]
 ENTRYPOINT [ "/app/start.sh" ]

@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -122,6 +124,76 @@ func (o *Order) createOrder(ctx *gin.Context) {
 		return
 	}
 
+	wg := sync.WaitGroup{}
+	newCtx, cancel := context.WithCancel(ctx)
+	if err := newCtx.Err(); err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"Error":   err.Error(),
+			"message": "error creating context",
+		})
+	}
+
+	defer cancel()
+
+	for _, value := range orderItems {
+		wg.Add(1)
+
+		go func(item OrderItem) {
+
+			defer wg.Done()
+
+			productCtx, productCancel := context.WithCancel(newCtx)
+			defer productCancel()
+
+			select {
+			case <-productCtx.Done():
+				ctx.JSON(http.StatusNotFound, gin.H{
+					"Error":   productCtx.Err().Error(),
+					"message": "error creating context inside goroutine",
+				})
+				ctx.Abort()
+				return
+
+			default:
+				productByID, err := o.server.queries.GetProductById(productCtx, int64(item.ProductID))
+				if err == sql.ErrNoRows {
+					ctx.JSON(http.StatusNotFound, gin.H{
+						"Error":   err.Error(),
+						"message": "Product not found",
+					})
+					return
+				} else if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"Error":   err.Error(),
+						"message": "Issue Encountered, try again later",
+					})
+					return
+				}
+
+				arg := db.UpdateProductParams{
+					ID:          productByID.ID,
+					Name:        productByID.Name,
+					Images:      productByID.Images,
+					Price:       productByID.Price,
+					Description: productByID.Description,
+					QtyAval:     productByID.QtyAval - int32(item.QtyBought),
+					UpdatedAt:   time.Now(),
+				}
+
+				_, err = o.server.queries.UpdateProduct(context.Background(), arg)
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"Error":   err.Error(),
+						"message": "Issue Encountered updating product, try again later",
+					})
+					return
+				}
+			}
+		}(value)
+	}
+
+	wg.Wait()
+
 	orderResponse := OrderResponse{
 		ID:        newOrder.ID,
 		UserID:    newOrder.UserID,
@@ -130,7 +202,7 @@ func (o *Order) createOrder(ctx *gin.Context) {
 		UpdatedAt: newOrder.UpdatedAt,
 	}
 
-	ctx.JSON(http.StatusAccepted, gin.H{
+	ctx.JSON(http.StatusCreated, gin.H{
 		"status":  "success",
 		"message": "order created successfully",
 		"data":    orderResponse,

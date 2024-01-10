@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -82,6 +83,11 @@ type ProductResponse struct {
 	SubCategoryID   int64    `json:"subcategory_id"`
 	CategoryName    string   `json:"category_name"`
 	SubCategoryName string   `json:"subcategory_name"`
+}
+
+type Pagination struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
 }
 
 func (p Product) router(server *Server) {
@@ -478,9 +484,40 @@ func (p *Product) getProductByName(ctx *gin.Context) {
 }
 
 func (p *Product) listProducts(ctx *gin.Context) {
+
+	pages := Pagination{}
+
+	if err := ctx.ShouldBindQuery(&pages); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	// Get page and limit from query parameters, default to 1 and 10 if not provided
+	defaultPage, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	defaultLimit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "15"))
+
+	page := func() int {
+		if pages.Page > 0 {
+			return pages.Page
+		}
+		return defaultPage
+	}()
+
+	limit := func() int {
+		if pages.Limit > 0 {
+			return pages.Limit
+		}
+		return defaultLimit
+	}()
+
+	// Calculate offset based on page and limit
+	offset := (page - 1) * limit
+
 	arg := db.ListAllProductsParams{
-		Limit:  10,
-		Offset: 0,
+		Limit:  int32(limit),
+		Offset: int32(offset),
 	}
 
 	products, err := p.server.queries.ListAllProducts(context.Background(), arg)
