@@ -1,6 +1,7 @@
 package all_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -14,9 +15,14 @@ type Params struct {
 
 var tokenManager *utils.JWTToken
 
-//var config *utils.Config
+var DbConfig *utils.Config
 
 func TestCreateToken(t *testing.T) {
+
+	DbConfig, err := utils.LoadOtherConfig(".")
+	if err != nil {
+		log.Fatal("Could not load env config", err)
+	}
 
 	userToken := Params{
 		userID:  1,
@@ -31,6 +37,11 @@ func TestCreateToken(t *testing.T) {
 }
 
 func TestVerifyToken(t *testing.T) {
+
+	DbConfig, err := utils.LoadOtherConfig(".")
+	if err != nil {
+		log.Fatal("Could not load env config", err)
+	}
 
 	userToken := Params{
 		userID:  10,

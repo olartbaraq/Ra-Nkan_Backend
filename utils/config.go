@@ -54,6 +54,7 @@ func LoadOtherConfig(path string) (config *Config, err error) {
 
 	err = viper.ReadInConfig()
 	if err != nil {
+
 		return nil, err
 	}
 

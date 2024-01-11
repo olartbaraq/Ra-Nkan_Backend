@@ -22,7 +22,7 @@ import (
 
 func ImageUploadHelper(filename interface{}) (string, error) {
 
-	otherConfig, err := utils.LoadOtherConfig("..")
+	otherConfig, err := utils.LoadOtherConfig(".")
 	if err != nil {
 		log.Fatal("Could not load env config in cloudinary", err)
 	}

@@ -9,7 +9,7 @@ import (
 
 func RedisInit() *redis.Client {
 
-	otherConfig, err := utils.LoadOtherConfig("..")
+	otherConfig, err := utils.LoadOtherConfig(".")
 	if err != nil {
 		log.Fatal("Could not load env config", err)
 	}
