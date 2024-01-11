@@ -11,6 +11,14 @@ type Config struct {
 	DBsource              string        `mapstructure:"DB_SOURCE"`
 	DBsourceLive          string        `mapstructure:"DB_SOURCE_LIVE"`
 	SigningKey            string        `mapstructure:"SIGNING_KEY"`
+	CloudName             string        `mapstructure:"CLOUD_NAME"`
+	CloudApiKey           string        `mapstructure:"CLOUDINARY_API_KEY"`
+	CloudApiSecret        string        `mapstructure:"CLOUDINARY_API_SECRET"`
+	CloudUploadFolder     string        `mapstructure:"CLOUDINARY_UPLOAD_FOLDER"`
+	GoogleUsername        string        `mapstructure:"GOOGLE_USERNAME"`
+	GooglePassword        string        `mapstructure:"GOOGLE_PASSWORD"`
+	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
+	RedisAddress          string        `mapstructure:"REDIS_ADDRESS"`
 	AccessTokenExpiresIn  time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
 	RefreshTokenExpiresIn time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRED_IN"`
 	AccessTokenMaxAge     int           `mapstructure:"ACCESS_TOKEN_MAXAGE"`
@@ -37,22 +45,22 @@ func LoadDBConfig(path string) (config *Config, err error) {
 	return config, nil
 }
 
-// func LoadOtherConfig(path string) (config2 *Config, err error) {
-// 	viper.AddConfigPath(path)
-// 	viper.SetConfigName("app")
-// 	viper.SetConfigType("env")
+func LoadOtherConfig(path string) (config *Config, err error) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("app")
+	viper.SetConfigType("env")
 
-// 	viper.AutomaticEnv()
+	viper.AutomaticEnv()
 
-// 	err = viper.ReadInConfig()
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	err = viper.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
 
-// 	err = viper.Unmarshal(&config2)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return config2, nil
-// }
+	return config, nil
+}

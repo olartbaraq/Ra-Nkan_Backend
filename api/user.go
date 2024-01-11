@@ -7,13 +7,11 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	config "github.com/olartbaraq/spectrumshelf/configs"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	redisInit "github.com/olartbaraq/spectrumshelf/redis"
 	"github.com/olartbaraq/spectrumshelf/utils"
@@ -86,12 +84,6 @@ type VerificationResponse struct {
 	ExpiresAt     time.Duration
 	Email         string
 }
-
-// var Rdb = redis.NewClient(&redis.Options{
-// 	Addr:     "localhost:6379",
-// 	Password: config.EnvRedisPassword(),
-// 	DB:       0, // use default DB
-// })
 
 var Rdb = redisInit.RedisInit()
 
@@ -510,23 +502,25 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		defer wg.Done()
 
 		//fmt.Println("About to read html")
-		filereader, err := os.ReadFile("verification.html")
-		if err != nil {
-			e <- err
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"statusCode": http.StatusInternalServerError,
-				"Error":      err.Error(),
-			})
-			ctx.Abort()
-			return
-		}
+		// filereader, err := os.ReadFile("verification.html")
+		// if err != nil {
+		// 	e <- err
+		// 	ctx.JSON(http.StatusInternalServerError, gin.H{
+		// 		"statusCode": http.StatusInternalServerError,
+		// 		"Error":      err.Error(),
+		// 	})
+		// 	ctx.Abort()
+		// 	return
+		// }
 
-		messagetoSend := string(filereader)
-		_ = messagetoSend
+		// messagetoSend := string(filereader)
+		// _ = messagetoSend
+
 		//fmt.Println("File converted")
+
 		newmessage := fmt.Sprintf("Hi %v,\n\nWe've received your request for a single-use code to use with your Ra'Nkan account.\n\nYour verification code is: %v,\n\nIf you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.\nThanks,\nThe Ra'Nkan account team\n", userEmail, code)
-		sender := config.EnvGoogleUsername()
-		password := config.EnvGooglePassword()
+		sender := u.server.config.GoogleUsername
+		password := u.server.config.GooglePassword
 		smtpHost := "smtp.gmail.com"
 		smtpPort := 587
 

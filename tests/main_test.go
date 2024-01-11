@@ -12,15 +12,17 @@ import (
 
 var testQueries *db.Queries
 
+var DbConfig *utils.Config
+
 func TestMain(m *testing.M) {
 	// This function is to perform the main test.
 
-	dbConfig, err := utils.LoadDBConfig("..")
+	DbConfig, err := utils.LoadDBConfig("..")
 	if err != nil {
 		log.Fatal("Could not load env config", err)
 	}
 
-	conn, err := sql.Open(dbConfig.DBdriver, dbConfig.DBsource)
+	conn, err := sql.Open(DbConfig.DBdriver, DbConfig.DBsource)
 	if err != nil {
 		log.Fatalf("There was an error connecting to database: %v", err)
 	}

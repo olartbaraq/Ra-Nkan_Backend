@@ -1,10 +1,8 @@
 package all_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/olartbaraq/spectrumshelf/api"
 	"github.com/olartbaraq/spectrumshelf/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,16 +12,9 @@ type Params struct {
 	isAdmin bool
 }
 
-func returnJWT() *utils.JWTToken {
-	config, err := utils.LoadDBConfig("..")
-	if err != nil {
-		panic(fmt.Sprintf("Could not load env config: %v", err))
-	}
+var tokenManager *utils.JWTToken
 
-	jwtToken := utils.NewJWTToken(config)
-
-	return jwtToken
-}
+//var config *utils.Config
 
 func TestCreateToken(t *testing.T) {
 
@@ -32,7 +23,9 @@ func TestCreateToken(t *testing.T) {
 		isAdmin: false,
 	}
 
-	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin, api.ConfigViper.AccessTokenExpiresIn)
+	tokenManager = utils.NewJWTToken(DbConfig)
+
+	token, err := tokenManager.CreateToken(userToken.userID, userToken.isAdmin, DbConfig.AccessTokenExpiresIn)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 }
@@ -43,15 +36,16 @@ func TestVerifyToken(t *testing.T) {
 		userID:  10,
 		isAdmin: true,
 	}
+	tokenManager = utils.NewJWTToken(DbConfig)
 
-	token, err := returnJWT().CreateToken(userToken.userID, userToken.isAdmin, api.ConfigViper.AccessTokenExpiresIn)
+	token, err := tokenManager.CreateToken(userToken.userID, userToken.isAdmin, DbConfig.AccessTokenExpiresIn)
 
 	if err != nil {
 		t.Fatalf("Error generating token: %v", err)
 		return
 	}
 
-	claimToken, role, err := (returnJWT()).VerifyToken(token)
+	claimToken, role, err := tokenManager.VerifyToken(token)
 	assert.NoError(t, err)
 	assert.Equal(t, role, "admin")
 	assert.NotEmpty(t, claimToken)

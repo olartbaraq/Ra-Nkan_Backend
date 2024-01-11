@@ -1,14 +1,21 @@
 package redisInit
 
 import (
-	config "github.com/olartbaraq/spectrumshelf/configs"
+	"log"
+
+	"github.com/olartbaraq/spectrumshelf/utils"
 	"github.com/redis/go-redis/v9"
 )
 
 func RedisInit() *redis.Client {
+
+	otherConfig, err := utils.LoadOtherConfig("..")
+	if err != nil {
+		log.Fatal("Could not load env config", err)
+	}
 	var Rdb = redis.NewClient(&redis.Options{
-		Addr:     config.EnvRedisAddress(),
-		Password: config.EnvRedisPassword(),
+		Addr:     otherConfig.RedisAddress,
+		Password: otherConfig.RedisPassword,
 		DB:       0, // use default DB
 	})
 
