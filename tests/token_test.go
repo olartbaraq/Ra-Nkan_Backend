@@ -19,7 +19,7 @@ var DbConfig *utils.Config
 
 func TestCreateToken(t *testing.T) {
 
-	DbConfig, err := utils.LoadOtherConfig(".")
+	DbConfig, err := utils.LoadOtherConfig("..")
 	if err != nil {
 		log.Fatal("Could not load env config", err)
 	}
@@ -38,7 +38,7 @@ func TestCreateToken(t *testing.T) {
 
 func TestVerifyToken(t *testing.T) {
 
-	DbConfig, err := utils.LoadOtherConfig(".")
+	DbConfig, err := utils.LoadOtherConfig("..")
 	if err != nil {
 		log.Fatal("Could not load env config", err)
 	}
