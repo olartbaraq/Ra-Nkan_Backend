@@ -12,17 +12,21 @@ import (
 	_ "github.com/lib/pq"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
 	"github.com/olartbaraq/spectrumshelf/utils"
+	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
 	queries *db.Queries
 	router  *gin.Engine
 	config  *utils.Config
+	config2 *utils.Config
 }
 
 var tokenManager *utils.JWTToken
 
-var ConfigViper *utils.Config
+var cloudValues *CloudinaryValues
+
+var Rdb *redis.Client
 
 func NewServer(envPath string) *Server {
 
@@ -30,13 +34,19 @@ func NewServer(envPath string) *Server {
 	if err != nil {
 		panic(fmt.Sprintf("Could not load env.env config: %v", err))
 	}
+	config2, err := utils.LoadOtherConfig(envPath)
+	if err != nil {
+		panic(fmt.Sprintf("Could not load env.env config: %v", err))
+	}
 
-	conn, err := sql.Open(config.DBdriver, config.DBsourceLive)
+	conn, err := sql.Open(config2.DBdriverLive, config2.DBsourceLive)
 	if err != nil {
 		panic(fmt.Sprintf("There was an error connecting to database: %v", err))
 	}
 
-	tokenManager = utils.NewJWTToken(config)
+	tokenManager = utils.NewJWTToken(config2)
+
+	cloudValues = NewCloudinaryValues(config2)
 
 	q := db.New(conn)
 
@@ -45,10 +55,17 @@ func NewServer(envPath string) *Server {
 	g.MaxMultipartMemory = 8 << 20
 
 	g.Use(cors.Default())
+
+	Rdb = redis.NewClient(&redis.Options{
+		Addr:     config2.RedisAddress,
+		Password: config2.RedisPassword,
+		DB:       0, // use default DB
+	})
 	return &Server{
 		queries: q,
 		router:  g,
 		config:  config,
+		config2: config2,
 	}
 
 }

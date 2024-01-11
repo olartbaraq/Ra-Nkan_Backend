@@ -26,7 +26,7 @@ func (*media) FileUpload(file File) (string, error) {
 	}
 
 	//upload
-	uploadUrl, err := ImageUploadHelper(file.File)
+	uploadUrl, err := cloudValues.ImageUploadHelper(file.File)
 	if err != nil {
 		log.Println("ImageFileHelper error:", err)
 		return "", err
@@ -37,7 +37,7 @@ func (*media) FileUpload(file File) (string, error) {
 func (*media) RemoteUpload(url Url) (string, error) {
 
 	//upload
-	uploadUrl, errUrl := ImageUploadHelper(url.Url)
+	uploadUrl, errUrl := cloudValues.ImageUploadHelper(url.Url)
 	if errUrl != nil {
 		return "", errUrl
 	}

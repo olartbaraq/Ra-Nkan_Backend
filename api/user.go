@@ -13,7 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
-	redisInit "github.com/olartbaraq/spectrumshelf/redis"
 	"github.com/olartbaraq/spectrumshelf/utils"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/gomail.v2"
@@ -84,8 +83,6 @@ type VerificationResponse struct {
 	ExpiresAt     time.Duration
 	Email         string
 }
-
-var Rdb = redisInit.RedisInit()
 
 func extractTokenFromRequest(ctx *gin.Context) (string, error) {
 	// Extract the token from the Authorization header
@@ -519,8 +516,8 @@ func (u *User) sendCodetoUser(ctx *gin.Context) {
 		//fmt.Println("File converted")
 
 		newmessage := fmt.Sprintf("Hi %v,\n\nWe've received your request for a single-use code to use with your Ra'Nkan account.\n\nYour verification code is: %v,\n\nIf you didn't request this code, you can safely ignore this email. Someone else might have typed your email address by mistake.\nThanks,\nThe Ra'Nkan account team\n", userEmail, code)
-		sender := u.server.config.GoogleUsername
-		password := u.server.config.GooglePassword
+		sender := u.server.config2.GoogleUsername
+		password := u.server.config2.GooglePassword
 		smtpHost := "smtp.gmail.com"
 		smtpPort := 587
 

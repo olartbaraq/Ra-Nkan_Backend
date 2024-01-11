@@ -188,7 +188,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	access_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config.AccessTokenExpiresIn)
+	access_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config2.AccessTokenExpiresIn)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -197,7 +197,7 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	refresh_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config.RefreshTokenExpiresIn)
+	refresh_token, err := tokenManager.CreateToken(dbUser.ID, dbUser.IsAdmin, a.server.config2.RefreshTokenExpiresIn)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -206,9 +206,9 @@ func (a Auth) login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("access_token", access_token, a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("refresh_token", refresh_token, a.server.config.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("logged_in", "true", a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.SetCookie("access_token", access_token, a.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", refresh_token, a.server.config2.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", a.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 	userResponse := UserResponse{
 		ID:         dbUser.ID,
@@ -256,14 +256,14 @@ func (a *Auth) RefreshAccessToken(ctx *gin.Context) {
 		return
 	}
 
-	access_token, err := tokenManager.CreateToken(user.ID, user.IsAdmin, a.server.config.AccessTokenExpiresIn)
+	access_token, err := tokenManager.CreateToken(user.ID, user.IsAdmin, a.server.config2.AccessTokenExpiresIn)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	ctx.SetCookie("access_token", access_token, a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("logged_in", "true", a.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.SetCookie("access_token", access_token, a.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", a.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, false)
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "access_token": access_token})
 }
 

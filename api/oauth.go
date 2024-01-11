@@ -127,7 +127,7 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 				return
 			}
 
-			access_token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin, o.server.config.AccessTokenExpiresIn)
+			access_token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin, o.server.config2.AccessTokenExpiresIn)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -136,7 +136,7 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 				return
 			}
 
-			refresh_token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin, o.server.config.RefreshTokenExpiresIn)
+			refresh_token, err := tokenManager.CreateToken(oAuthUserToSave.ID, oAuthUserToSave.IsAdmin, o.server.config2.RefreshTokenExpiresIn)
 
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -145,9 +145,9 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 				return
 			}
 
-			ctx.SetCookie("access_token", access_token, o.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
-			ctx.SetCookie("refresh_token", refresh_token, ConfigViper.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-			ctx.SetCookie("logged_in", "true", o.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+			ctx.SetCookie("access_token", access_token, o.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, true)
+			ctx.SetCookie("refresh_token", refresh_token, o.server.config2.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+			ctx.SetCookie("logged_in", "true", o.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 			userResponse := UserResponse{
 				ID:         oAuthUserToSave.ID,
@@ -163,12 +163,12 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			}
 
 			ctx.JSON(http.StatusOK, gin.H{
-				"statusCode":    http.StatusOK,
-				"status":        "success",
-				"message":       "login successful",
-				"access_token":  access_token,
-				"refresh_token": refresh_token,
-				"data":          userResponse,
+				"statusCode": http.StatusOK,
+				"status":     "success",
+				"message":    "login successful",
+				// "access_token":  access_token,
+				// "refresh_token": refresh_token,
+				"data": userResponse,
 			})
 			return
 		} else if err != nil {
@@ -178,7 +178,7 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			return
 		}
 
-		access_token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin, o.server.config.AccessTokenExpiresIn)
+		access_token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin, o.server.config2.AccessTokenExpiresIn)
 
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -187,7 +187,7 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			return
 		}
 
-		refresh_token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin, o.server.config.RefreshTokenExpiresIn)
+		refresh_token, err := tokenManager.CreateToken(oAuthDbUser.ID, oAuthDbUser.IsAdmin, o.server.config2.RefreshTokenExpiresIn)
 
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -196,9 +196,9 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 			return
 		}
 
-		ctx.SetCookie("access_token", access_token, o.server.config.AccessTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("refresh_token", refresh_token, o.server.config.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-		ctx.SetCookie("logged_in", "true", o.server.config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+		ctx.SetCookie("access_token", access_token, o.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, true)
+		ctx.SetCookie("refresh_token", refresh_token, o.server.config2.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+		ctx.SetCookie("logged_in", "true", o.server.config2.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
 		userResponse := UserResponse{
 			ID:         oAuthDbUser.ID,
@@ -214,12 +214,12 @@ func (o *Oauth) createUser(ctx *gin.Context) {
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{
-			"statusCode":    http.StatusOK,
-			"status":        "success",
-			"message":       "login successful",
-			"access_token":  access_token,
-			"refresh_token": refresh_token,
-			"data":          userResponse,
+			"statusCode": http.StatusOK,
+			"status":     "success",
+			"message":    "login successful",
+			// "access_token":  access_token,
+			// "refresh_token": refresh_token,
+			"data": userResponse,
 		})
 
 	case <-time.After(5 * time.Second):

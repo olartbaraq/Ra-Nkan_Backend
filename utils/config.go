@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	DBdriver              string        `mapstructure:"DB_DRIVER"`
+	DBdriverLive          string        `mapstructure:"DB_DRIVER_LIVE"`
 	DBsource              string        `mapstructure:"DB_SOURCE"`
 	DBsourceLive          string        `mapstructure:"DB_SOURCE_LIVE"`
 	SigningKey            string        `mapstructure:"SIGNING_KEY"`
