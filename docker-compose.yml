@@ -1,0 +1,72 @@
+version: '3'
+
+services: 
+  postgres:
+    container_name: spectrumshelf_postgres
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=testing
+    ports:
+      - 5432:5432
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.2
+
+  postgres-live:
+    container_name: ra_nkan_live
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=testing
+      - POSTGRES_DB=ra_nkan_db
+    ports:
+      - 5433:5432
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.3
+
+  redis-live:
+    container_name: redis_live
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - /path/to/local/dаta:/root/redis
+      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+    ports:
+      - 6379:6379
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.4
+  
+  api:
+    container_name: ra_nkan_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - DB_SOURCE_LIVE=postgres://root:testing@172.18.0.1:5433/ra_nkan_db?sslmode=disable
+      - REDIS_ADDRESS=172.18.0.1:6379
+    depends_on:
+      - postgres-live
+      - redis-live
+    entrypoint: [ "/app/wait-for.sh", "172.18.0.1:5433", "172.18.0.1:6379", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
+    networks:
+      my-network:
+        ipv4_address: 172.18.0.5
+
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
