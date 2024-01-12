@@ -1,4 +1,4 @@
-# This workflow will build a golang project
+# This workflow will build a golang project and deploy to prodyction
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
 name: Deploy to Production
@@ -19,7 +19,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: eu-west-1
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -30,6 +30,6 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ra_nkan
         IMAGE_TAG: ${{ github.sha }}
-      run:  
+      run:  |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
