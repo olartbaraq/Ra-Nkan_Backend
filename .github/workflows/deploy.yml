@@ -15,7 +15,7 @@ jobs:
 
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repo code
       uses: actions/checkout@v3
 
     - name: Configure AWS credentials
