@@ -25,8 +25,24 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-west-1
 
-    - name: Set up environment variables
-      run: echo "APP_ENV=${{ secrets.APP_ENV }}" >> $GITHUB_ENV
+    - name: Extract and write to app.env
+      run: |
+        # Extract APP_ENV from secrets
+        APP_ENV_JSON=${{ secrets.APP_ENV }}
+        
+        # Parse the JSON and extract values for specific keys
+        CLOUD_NAME=$(echo "$SECRETS_JSON" | jq -r '.secrets[] | select(.name == "CLOUD_NAME") | .value')
+        CLOUD_API_KEY=$(echo "$SECRETS_JSON" | jq -r '.secrets[] | select(.name == "CLOUD_API_KEY") | .value')
+        DB_DRIVER_LIVE=$(echo "$SECRETS_JSON" | jq -r '.secrets[] | select(.name == "DB_DRIVER_LIVE") | .value')
+        DB_SOURCE_LIVE=$(echo "$SECRETS_JSON" | jq -r '.secrets[] | select(.name == "DB_SOURCE_LIVE") | .value')
+        
+        # Write the extracted values to the app.env file
+        echo "CLOUD_NAME=$CLOUD_NAME" > app.env
+        echo "CLOUD_API_KEY=$CLOUD_API_KEY" >> app.env
+        echo "DB_DRIVER_LIVE=$DB_DRIVER_LIVE" >> app.env
+        echo "DB_SOURCE_LIVE=$DB_SOURCE_LIVE" >> app.env
+      shell: bash
+      
 
     - name: Login to Amazon ECR
       id: login-ecr
