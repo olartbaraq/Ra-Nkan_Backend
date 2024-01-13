@@ -30,9 +30,8 @@ jobs:
         DB_DRIVER_LIVE: ${{ secrets.DB_DRIVER_LIVE }}
         DB_SOURCE_LIVE: ${{ secrets.DB_DRIVER_LIVE }}
       run: |
-        
         # Write the extracted values to the app.env file
-        echo "DB_DRIVER_LIVE=$DB_DRIVER_LIVE" >> app.env
+        echo "DB_DRIVER_LIVE=$DB_DRIVER_LIVE" > app.env
         echo "DB_SOURCE_LIVE=$DB_SOURCE_LIVE" >> app.env
       shell: bash
       
