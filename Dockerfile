@@ -14,7 +14,7 @@ FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate ./migrate
-ENV APP_ENV /app/app.env
+COPY app.env .
 COPY env.env .
 COPY start.sh .
 RUN chmod +x /app/start.sh
