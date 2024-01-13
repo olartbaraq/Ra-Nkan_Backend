@@ -29,10 +29,36 @@ jobs:
       env:
         DB_DRIVER_LIVE: ${{ secrets.DB_DRIVER_LIVE }}
         DB_SOURCE_LIVE: ${{ secrets.DB_SOURCE_LIVE }}
+        ACCESS_TOKEN_EXPIRED_IN: ${{ secrets.ACCESS_TOKEN_EXPIRED_IN }}
+        ACCESS_TOKEN_MAXAGE: ${{ secrets.ACCESS_TOKEN_MAXAGE }}
+        CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+        CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        CLOUDINARY_UPLOAD_FOLDER: ${{ secrets.CLOUDINARY_UPLOAD_FOLDER }}
+        CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+        CLOUD_NAME: ${{ secrets.CLOUD_NAME }}
+        GOOGLE_PASSWORD: ${{ secrets.GOOGLE_PASSWORD }}
+        GOOGLE_USERNAME: ${{ secrets.GOOGLE_USERNAME }}
+        REDIS_ADDRESS: ${{ secrets.REDIS_ADDRESS }}
+        REFRESH_TOKEN_EXPIRED_IN: ${{ secrets.REFRESH_TOKEN_EXPIRED_IN }}
+        REFRESH_TOKEN_MAXAGE: ${{ secrets.REFRESH_TOKEN_MAXAGE }}
+        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
       run: |
         # Write the extracted values to the app.env file
         echo "DB_DRIVER_LIVE=$DB_DRIVER_LIVE" > app.env
         echo "DB_SOURCE_LIVE=$DB_SOURCE_LIVE" >> app.env
+        echo "ACCESS_TOKEN_EXPIRED_IN=$ACCESS_TOKEN_EXPIRED_IN" >> app.env
+        echo "ACCESS_TOKEN_MAXAGE=$ACCESS_TOKEN_MAXAGE" >> app.env
+        echo "CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY" >> app.env
+        echo "CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET" >> app.env
+        echo "CLOUDINARY_UPLOAD_FOLDER=$CLOUDINARY_UPLOAD_FOLDER" >> app.env
+        echo "CLOUDINARY_URL=$CLOUDINARY_URL" >> app.env
+        echo "CLOUD_NAME=$CLOUD_NAME" >> app.env
+        echo "GOOGLE_PASSWORD=$GOOGLE_PASSWORD" >> app.env
+        echo "GOOGLE_USERNAME=$GOOGLE_USERNAME" >> app.env
+        echo "REDIS_ADDRESS=$REDIS_ADDRESS" >> app.env
+        echo "REFRESH_TOKEN_EXPIRED_IN=$REFRESH_TOKEN_EXPIRED_IN" >> app.env
+        echo "REFRESH_TOKEN_MAXAGE=$REFRESH_TOKEN_MAXAGE" >> app.env
+        echo "SIGNING_KEY=$SIGNING_KEY" >> app.env
       shell: bash
       
     - name: Login to Amazon ECR
