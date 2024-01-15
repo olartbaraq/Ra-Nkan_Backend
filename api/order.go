@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/olartbaraq/spectrumshelf/db/sqlc"
+	"github.com/olartbaraq/spectrumshelf/utils"
 )
 
 type Order struct {
@@ -27,8 +29,16 @@ type OrderItem struct {
 }
 
 type CreateOrderParams struct {
-	UserID int64       `json:"user_id" binding:"required"`
-	Items  []OrderItem `json:"items" binding:"required"`
+	UserID         int64       `json:"user_id" binding:"required"`
+	Items          []OrderItem `json:"items" binding:"required"`
+	TransactionRef string      `json:"transaction_ref" binding:"required"`
+	TotalPrice     string      `json:"total_price" binding:"required"`
+	PayRef         string      `json:"pay_ref" binding:"required"`
+	Status         string      `json:"status" binding:"required"`
+}
+type CompleteOrderParams struct {
+	ID     int64  `json:"id" binding:"required"`
+	PayRef string `json:"pay_ref" binding:"required"`
 }
 
 type OrderResponse struct {
@@ -45,6 +55,7 @@ func (order Order) router(server *Server) {
 	serverGroup := server.router.Group("/order", AuthenticatedMiddleware())
 
 	serverGroup.POST("/create_order", order.createOrder)
+	serverGroup.PUT("/complete_order", order.completeOrder)
 }
 
 func convertRawMessageToOrderItems(rawMessage json.RawMessage) ([]OrderItem, error) {
@@ -54,6 +65,8 @@ func convertRawMessageToOrderItems(rawMessage json.RawMessage) ([]OrderItem, err
 	}
 	return orderItems, nil
 }
+
+var randomTransRef string
 
 func (o *Order) createOrder(ctx *gin.Context) {
 
@@ -102,12 +115,105 @@ func (o *Order) createOrder(ctx *gin.Context) {
 		return
 	}
 
+	randomTransRef = fmt.Sprintf("%v-%v", utils.RandIntegers(3), utils.RandomString(10))
+
+	wg := sync.WaitGroup{}
+	newCtx, cancel := context.WithCancel(ctx)
+	if err := newCtx.Err(); err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"Error":   err.Error(),
+			"message": "error creating context",
+		})
+	}
+
+	defer cancel()
+
+	var overallPrice int
+	var totalPriceChan = make(chan int)
+
+	for _, value := range order.Items {
+
+		wg.Add(1)
+
+		totalPrice := 0
+
+		go func(eachItem OrderItem, priceChan chan int) {
+
+			defer wg.Done()
+
+			productCtx, productCancel := context.WithCancel(newCtx)
+			defer productCancel()
+
+			select {
+			case <-productCtx.Done():
+				ctx.JSON(http.StatusNotFound, gin.H{
+					"Error":   productCtx.Err().Error(),
+					"message": "error creating context inside goroutine",
+				})
+				ctx.Abort()
+				return
+
+			default:
+				totalPrice += int(eachItem.TotalPrice)
+			}
+
+			priceChan <- totalPrice
+
+		}(value, totalPriceChan)
+	}
+
+	go func() {
+		wg.Wait()
+		close(totalPriceChan)
+	}()
+
+	overallPrice = <-totalPriceChan
+
+	overallPriceString := fmt.Sprintf("%v", overallPrice)
+
 	arg := db.CreateOrderParams{
-		UserID: order.UserID,
-		Items:  json.RawMessage(itemsJSON),
+		UserID:         order.UserID,
+		Items:          json.RawMessage(itemsJSON),
+		TransactionRef: randomTransRef,
+		TotalPrice:     overallPriceString,
+		PayRef:         "",
+		Status:         "pending",
 	}
 
 	newOrder, err := o.server.queries.CreateOrder(context.Background(), arg)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
+		"message": "order created successfully",
+		"data":    newOrder,
+	})
+}
+
+func (o *Order) completeOrder(ctx *gin.Context) {
+
+	order := CompleteOrderParams{}
+
+	if err := ctx.ShouldBindJSON(&order); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"Error": err.Error(),
+		})
+		return
+	}
+
+	arg := db.CompleteOrderParams{
+		ID:     order.ID,
+		PayRef: order.PayRef,
+		Status: "completed",
+	}
+
+	newOrder, err := o.server.queries.CompleteOrder(context.Background(), arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -204,7 +310,7 @@ func (o *Order) createOrder(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"status":  "success",
-		"message": "order created successfully",
+		"message": "order completed successfully",
 		"data":    orderResponse,
 	})
 }

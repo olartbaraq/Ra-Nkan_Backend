@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-var alphabets = "abcdefghijklmnopqrstuvwxyz"
+var alphabets = "abcdefghijklmnopqrstuvwxyz123456789"
 var numbers = "123456789"
 
 func RandomString(r int) string {

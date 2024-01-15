@@ -59,6 +59,10 @@ CREATE TABLE "orders" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint NOT NULL,
   "items" jsonb NOT NULL,
+  "transaction_ref" varchar UNIQUE NOT NULL,
+  "pay_ref" varchar UNIQUE NOT NULL,
+  "status" varchar NOT NULL ,
+  "total_price" numeric(10,2) NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
