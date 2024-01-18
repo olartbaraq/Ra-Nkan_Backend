@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/cloudinary/cloudinary-go"
@@ -31,9 +33,9 @@ func (c *CloudinaryValues) ImageUploadHelper(filename interface{}) (string, erro
 
 	//create cloudinary instance
 	cldInstance, err := cloudinary.NewFromParams(c.config.CloudName, c.config.CloudApiKey, c.config.CloudApiSecret)
-	//log.Println("are we here?", c.config.CloudName, c.config.CloudApiKey, c.config.CloudApiSecret)
+	log.Println("are we here?", c.config.CloudName, c.config.CloudApiKey, c.config.CloudApiSecret)
 	if err != nil {
-		//println("Error creating cloudinary instance", err)
+		fmt.Println("Error creating cloudinary instance", err)
 		return "", err
 	}
 

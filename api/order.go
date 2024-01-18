@@ -31,10 +31,9 @@ type OrderItem struct {
 type CreateOrderParams struct {
 	UserID         int64       `json:"user_id" binding:"required"`
 	Items          []OrderItem `json:"items" binding:"required"`
-	TransactionRef string      `json:"transaction_ref" binding:"required"`
-	TotalPrice     string      `json:"total_price" binding:"required"`
-	PayRef         string      `json:"pay_ref" binding:"required"`
-	Status         string      `json:"status" binding:"required"`
+	TransactionRef string      `json:"transaction_ref"`
+	TotalPrice     string      `json:"total_price"`
+	Status         string      `json:"status"`
 }
 type CompleteOrderParams struct {
 	ID     int64  `json:"id" binding:"required"`
@@ -128,34 +127,18 @@ func (o *Order) createOrder(ctx *gin.Context) {
 
 	defer cancel()
 
-	var overallPrice int
-	var totalPriceChan = make(chan int)
+	var overallPrice float64
+	var totalPriceChan = make(chan float64)
 
 	for _, value := range order.Items {
 
 		wg.Add(1)
 
-		totalPrice := 0
-
-		go func(eachItem OrderItem, priceChan chan int) {
+		go func(eachItem OrderItem, priceChan chan float64) {
 
 			defer wg.Done()
 
-			productCtx, productCancel := context.WithCancel(newCtx)
-			defer productCancel()
-
-			select {
-			case <-productCtx.Done():
-				ctx.JSON(http.StatusNotFound, gin.H{
-					"Error":   productCtx.Err().Error(),
-					"message": "error creating context inside goroutine",
-				})
-				ctx.Abort()
-				return
-
-			default:
-				totalPrice += int(eachItem.TotalPrice)
-			}
+			totalPrice := eachItem.TotalPrice
 
 			priceChan <- totalPrice
 
@@ -167,7 +150,9 @@ func (o *Order) createOrder(ctx *gin.Context) {
 		close(totalPriceChan)
 	}()
 
-	overallPrice = <-totalPriceChan
+	for totalPrice := range totalPriceChan {
+		overallPrice += totalPrice
+	}
 
 	overallPriceString := fmt.Sprintf("%v", overallPrice)
 
@@ -175,8 +160,8 @@ func (o *Order) createOrder(ctx *gin.Context) {
 		UserID:         order.UserID,
 		Items:          json.RawMessage(itemsJSON),
 		TransactionRef: randomTransRef,
+		PayRef:         utils.RandomString(1),
 		TotalPrice:     overallPriceString,
-		PayRef:         "",
 		Status:         "pending",
 	}
 
