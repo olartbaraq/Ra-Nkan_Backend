@@ -116,52 +116,52 @@ func (o *Order) createOrder(ctx *gin.Context) {
 
 	randomTransRef = fmt.Sprintf("%v-%v", utils.RandIntegers(3), utils.RandomString(10))
 
-	wg := sync.WaitGroup{}
-	newCtx, cancel := context.WithCancel(ctx)
-	if err := newCtx.Err(); err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"Error":   err.Error(),
-			"message": "error creating context",
-		})
-	}
+	// wg := sync.WaitGroup{}
+	// newCtx, cancel := context.WithCancel(ctx)
+	// if err := newCtx.Err(); err != nil {
+	// 	ctx.JSON(http.StatusNotFound, gin.H{
+	// 		"Error":   err.Error(),
+	// 		"message": "error creating context",
+	// 	})
+	// }
 
-	defer cancel()
+	// defer cancel()
 
-	var overallPrice float64
-	var totalPriceChan = make(chan float64)
+	// var overallPrice float64
+	// var totalPriceChan = make(chan float64)
 
-	for _, value := range order.Items {
+	// for _, value := range order.Items {
 
-		wg.Add(1)
+	// 	wg.Add(1)
 
-		go func(eachItem OrderItem, priceChan chan float64) {
+	// 	go func(eachItem OrderItem, priceChan chan float64) {
 
-			defer wg.Done()
+	// 		defer wg.Done()
 
-			totalPrice := eachItem.TotalPrice
+	// 		totalPrice := eachItem.TotalPrice
 
-			priceChan <- totalPrice
+	// 		priceChan <- totalPrice
 
-		}(value, totalPriceChan)
-	}
+	// 	}(value, totalPriceChan)
+	// }
 
-	go func() {
-		wg.Wait()
-		close(totalPriceChan)
-	}()
+	// go func() {
+	// 	wg.Wait()
+	// 	close(totalPriceChan)
+	// }()
 
-	for totalPrice := range totalPriceChan {
-		overallPrice += totalPrice
-	}
+	// for totalPrice := range totalPriceChan {
+	// 	overallPrice += totalPrice
+	// }
 
-	overallPriceString := fmt.Sprintf("%v", overallPrice)
+	// overallPriceString := fmt.Sprintf("%v", overallPrice)
 
 	arg := db.CreateOrderParams{
 		UserID:         order.UserID,
 		Items:          json.RawMessage(itemsJSON),
 		TransactionRef: randomTransRef,
 		PayRef:         utils.RandomString(1),
-		TotalPrice:     overallPriceString,
+		TotalPrice:     order.TotalPrice,
 		Status:         "pending",
 	}
 
