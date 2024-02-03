@@ -1,1 +1,1 @@
-web: ./ra_nkan
+web: go run main.go
