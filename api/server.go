@@ -49,6 +49,8 @@ func NewServer(envPath string) *Server {
 	cloudValues = NewCloudinaryValues(config2)
 
 	q := db.New(conn)
+	
+	gin.SetMode(gin.ReleaseMode)
 
 	g := gin.Default()
 
@@ -58,7 +60,7 @@ func NewServer(envPath string) *Server {
 
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     config2.RedisAddress,
-		Password: "",
+		Password: config2.RedisPassword,
 		DB:       0, // use default DB
 	})
 	return &Server{

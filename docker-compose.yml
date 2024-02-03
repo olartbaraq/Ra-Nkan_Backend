@@ -1,6 +1,6 @@
-version: '3'
+version: "3"
 
-services: 
+services:
   postgres:
     container_name: spectrumshelf_postgres
     image: postgres:15-alpine
@@ -30,9 +30,6 @@ services:
     container_name: redis_live
     image: redis:7-alpine
     restart: always
-    volumes:
-      - /path/to/local/dаta:/root/redis
-      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_PASSWORD=my-password
       - REDIS_PORT=6379
@@ -42,7 +39,7 @@ services:
     networks:
       my-network:
         ipv4_address: 172.18.0.4
-  
+
   api:
     container_name: ra_nkan_api
     build:
@@ -56,8 +53,15 @@ services:
     depends_on:
       - postgres-live
       - redis-live
-    entrypoint: [ "/app/wait-for.sh", "172.18.0.1:5433", "172.18.0.1:6379", "--", "/app/start.sh" ]
-    command: [ "/app/main" ]
+    entrypoint:
+      [
+        "/app/wait-for.sh",
+        "172.18.0.1:5433",
+        "172.18.0.1:6379",
+        "--",
+        "/app/start.sh",
+      ]
+    command: ["/app/main"]
     networks:
       my-network:
         ipv4_address: 172.18.0.5
