@@ -37,12 +37,12 @@ dock_stop:
 m_up:
 	#run a migration to the database
 	migrate -path db/migrations -database "postgres://root:testing@localhost:5432/spectrumshelf_db?sslmode=disable" up
-	# migrate -path db/migrations -database "postgres://root:testing@localhost:5433/ra_nkan_db?sslmode=disable" up
+	migrate -path db/migrations -database "postgres://root:testing@localhost:5433/ra_nkan_db?sslmode=disable" up
 
 m_down:
 	#revert the migration from the database
 	migrate -path db/migrations -database "postgres://root:testing@localhost:5432/spectrumshelf_db?sslmode=disable" down
-	# migrate -path db/migrations -database "postgres://root:testing@localhost:5433/ra_nkan_db?sslmode=disable" down
+	migrate -path db/migrations -database "postgres://root:testing@localhost:5433/ra_nkan_db?sslmode=disable" down
 
 sqlc:
 	#generate the sql queries to golang

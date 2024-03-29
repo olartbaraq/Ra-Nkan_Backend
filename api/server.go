@@ -49,7 +49,7 @@ func NewServer(envPath string) *Server {
 	cloudValues = NewCloudinaryValues(config2)
 
 	q := db.New(conn)
-	
+
 	gin.SetMode(gin.ReleaseMode)
 
 	g := gin.Default()
